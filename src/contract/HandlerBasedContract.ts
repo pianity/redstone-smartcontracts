@@ -134,9 +134,14 @@ export class HandlerBasedContract<State> implements Contract<State> {
     return await this.callContractForTx<Input, View>(input, interactionTx);
   }
 
-  async dryWrite<Input>(input: Input, tags?: Tags, transfer?: ArTransfer): Promise<InteractionResult<State, unknown>> {
+  async dryWrite<Input>(
+    input: Input,
+    tags?: Tags,
+    transfer?: ArTransfer,
+    caller?: string
+  ): Promise<InteractionResult<State, unknown>> {
     this.logger.info('Dry-write for', this._contractTxId);
-    return await this.callContract<Input>(input, undefined, tags, transfer);
+    return await this.callContract<Input>(input, undefined, tags, transfer, caller);
   }
 
   async dryWriteFromTx<Input>(
@@ -268,8 +273,14 @@ export class HandlerBasedContract<State> implements Contract<State> {
     blockHeight?: number,
     forceDefinitionLoad = false
   ): Promise<ExecutionContext<State, HandlerApi<State>>> {
-    const { arweave, definitionLoader, interactionsLoader, interactionsSorter, executorFactory, stateEvaluator } =
-      this.smartweave;
+    const {
+      arweave,
+      definitionLoader,
+      interactionsLoader,
+      interactionsSorter,
+      executorFactory,
+      stateEvaluator
+    } = this.smartweave;
 
     let currentNetworkInfo;
 
@@ -357,8 +368,13 @@ export class HandlerBasedContract<State> implements Contract<State> {
     transaction: GQLNodeInterface
   ): Promise<ExecutionContext<State, HandlerApi<State>>> {
     const benchmark = Benchmark.measure();
-    const { definitionLoader, interactionsLoader, interactionsSorter, executorFactory, stateEvaluator } =
-      this.smartweave;
+    const {
+      definitionLoader,
+      interactionsLoader,
+      interactionsSorter,
+      executorFactory,
+      stateEvaluator
+    } = this.smartweave;
     const blockHeight = transaction.block.height;
     const caller = transaction.owner.address;
 
@@ -413,7 +429,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
     input: Input,
     blockHeight?: number,
     tags: Tags = [],
-    transfer: ArTransfer = emptyTransfer
+    transfer: ArTransfer = emptyTransfer,
+    caller?: string
   ): Promise<InteractionResult<State, View>> {
     this.logger.info('Call contract input', input);
     this.maybeResetRootContract();
@@ -438,10 +455,9 @@ export class HandlerBasedContract<State> implements Contract<State> {
     }
 
     // add caller info to execution context
-    const caller = this.wallet ? await arweave.wallets.jwkToAddress(this.wallet) : '';
     executionContext = {
       ...executionContext,
-      caller
+      caller: caller || this.wallet ? await arweave.wallets.jwkToAddress(this.wallet) : ''
     };
 
     // eval current state
