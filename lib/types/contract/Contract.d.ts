@@ -13,7 +13,7 @@ export declare type BenchmarkStats = {
 export declare type SigningFunction = (tx: Transaction) => Promise<void>;
 export declare type ContractErrorKind = 'NoWalletConnected';
 export declare type CreateInteractionErrorKind = 'InvalidInteraction';
-export declare type BundleInteractionErrorKind = ContractErrorKind | CreateInteractionErrorKind | 'BadGatewayResponse' | 'TxCreationFailed' | 'InvalidInteraction' | 'UnrecognizedGatewayStatus' | 'CannotBundle';
+export declare type BundleInteractionErrorKind = ContractErrorKind | CreateInteractionErrorKind | 'BadGatewayResponse' | 'CannotBundle';
 export declare class BundleInteractionError extends CustomError<BundleInteractionErrorKind> {
 }
 /**
