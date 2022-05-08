@@ -1,4 +1,5 @@
-import { ArTransfer, ArWallet, ContractCallStack, CustomError, EvalStateResult, EvaluationOptions, GQLNodeInterface, InteractionResult, Tags } from '..';
+import { ArTransfer, ArWallet, ContractCallStack, EvalStateResult, EvaluationOptions, GQLNodeInterface, InteractionResult, Tags } from '..';
+import { CustomError } from '../utils/index';
 import { NetworkInfoInterface } from 'arweave/node/network';
 import Transaction from 'arweave/node/lib/transaction';
 export declare type CurrentTx = {

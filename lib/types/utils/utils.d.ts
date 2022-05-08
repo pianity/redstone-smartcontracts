@@ -11,9 +11,4 @@ export declare function timeout(s: number): {
     timeoutPromise: Promise<any>;
 };
 export declare function stripTrailingSlash(str: string): string;
-export declare class CustomError<T> extends Error {
-    kind: T;
-    originalError?: unknown;
-    constructor(kind: T, message?: string, originalError?: unknown);
-}
 //# sourceMappingURL=utils.d.ts.map
