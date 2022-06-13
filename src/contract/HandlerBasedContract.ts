@@ -38,6 +38,7 @@ import { NetworkInfoInterface } from 'arweave/node/network';
 import stringify from 'safe-stable-stringify';
 import * as crypto from 'crypto';
 import Transaction from 'arweave/node/lib/transaction';
+import { options } from 'tsconfig-paths/lib/options';
 
 /**
  * An implementation of {@link Contract} that is backwards compatible with current style
@@ -228,15 +229,40 @@ export class HandlerBasedContract<State> implements Contract<State> {
     return interactionTx.id;
   }
 
-  async bundleInteraction<Input>(input: Input, tags: Tags = [], strict = false): Promise<any | null> {
+  async bundleInteraction<Input>(
+    input: Input,
+    options: {
+      tags: Tags;
+      strict: boolean;
+      vrf: boolean;
+    } = {
+      tags: [],
+      strict: false,
+      vrf: false
+    }
+  ): Promise<any | null> {
     this.logger.info('Bundle interaction input', input);
     if (!this.signer) {
       throw new BundleInteractionError('NoWalletConnected', "Wallet not connected. Use 'connect' method first.");
     }
 
+    options = {
+      tags: [],
+      strict: false,
+      vrf: false,
+      ...options
+    };
+
     let interactionTx: Transaction;
     try {
-      interactionTx = await this.createInteraction(input, tags, emptyTransfer, strict);
+      interactionTx = await this.createInteraction(
+        input,
+        options.tags,
+        emptyTransfer,
+        options.strict,
+        true,
+        options.vrf
+      );
     } catch (e) {
       if (e instanceof InteractionsLoaderError) {
         throw new BundleInteractionError('BadGatewayResponse', `${e}`, e);
@@ -245,7 +271,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       }
     }
 
-    const response = await fetch(`${this._evaluationOptions.bundlerAddress}gateway/sequencer/register`, {
+    const response = await fetch(`${this._evaluationOptions.bundlerUrl}gateway/sequencer/register`, {
       method: 'POST',
       body: JSON.stringify(interactionTx),
       headers: {
@@ -274,9 +300,11 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
   private async createInteraction<Input>(
     input: Input,
-    tags: { name: string; value: string }[],
+    tags: Tags,
     transfer: ArTransfer,
-    strict: boolean
+    strict: boolean,
+    bundle = false,
+    vrf = false
   ) {
     if (this._evaluationOptions.internalWrites) {
       // Call contract and verify if there are any internal writes:
@@ -311,6 +339,13 @@ export class HandlerBasedContract<State> implements Contract<State> {
       }
     }
 
+    if (vrf) {
+      tags.push({
+        name: SmartWeaveTags.REQUEST_VRF,
+        value: 'true'
+      });
+    }
+
     const interactionTx = await createTx(
       this.smartweave.arweave,
       this.signer,
@@ -318,7 +353,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
       input,
       tags,
       transfer.target,
-      transfer.winstonQty
+      transfer.winstonQty,
+      bundle
     );
     return interactionTx;
   }
