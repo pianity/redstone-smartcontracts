@@ -1,4 +1,4 @@
-import { ContractDefinition } from '../..';
+import { ContractDefinition, ContractSource } from '../..';
 /**
  * Implementors of this interface are responsible for loading contract's definitions -
  * its source code, info about owner, initial state, etc.
@@ -6,5 +6,6 @@ import { ContractDefinition } from '../..';
  */
 export interface DefinitionLoader {
     load<State>(contractTxId: string, evolvedSrcTxId?: string): Promise<ContractDefinition<State>>;
+    loadContractSource(srcTxId: string): Promise<ContractSource>;
 }
 //# sourceMappingURL=DefinitionLoader.d.ts.map

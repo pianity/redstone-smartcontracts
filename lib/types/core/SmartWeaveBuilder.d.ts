@@ -20,6 +20,8 @@ export declare class SmartWeaveBuilder {
         [key: string]: string;
     }): SmartWeave;
     useRedStoneGateway(confirmationStatus?: ConfirmationStatus, source?: SourceType, address?: string): SmartWeaveBuilder;
+    useArweaveGateway(): SmartWeaveBuilder;
+    useRedStoneGwInfo(): SmartWeaveBuilder;
     build(): SmartWeave;
 }
 //# sourceMappingURL=SmartWeaveBuilder.d.ts.map

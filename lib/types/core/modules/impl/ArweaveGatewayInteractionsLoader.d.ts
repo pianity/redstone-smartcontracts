@@ -16,7 +16,7 @@ export interface GqlReqVariables {
 }
 export declare function bundledTxsFilter(tx: GQLEdgeInterface): boolean;
 export declare class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
-    private readonly arweave;
+    protected readonly arweave: Arweave;
     private readonly logger;
     private static readonly query;
     private static readonly _30seconds;

@@ -15,6 +15,7 @@ export declare abstract class DefaultStateEvaluator implements StateEvaluator {
     protected constructor(arweave: Arweave, executionContextModifiers?: ExecutionContextModifier[]);
     eval<State>(executionContext: ExecutionContext<State, HandlerApi<State>>, currentTx: CurrentTx[]): Promise<EvalStateResult<State>>;
     protected doReadState<State>(missingInteractions: GQLEdgeInterface[], baseState: EvalStateResult<State>, executionContext: ExecutionContext<State, HandlerApi<State>>, currentTx: CurrentTx[]): Promise<EvalStateResult<State>>;
+    private verifyVrf;
     private logResult;
     private parseInput;
     abstract latestAvailableState<State>(contractTxId: string, blockHeight: number): Promise<BlockHeightCacheResult<EvalStateResult<State>> | null>;

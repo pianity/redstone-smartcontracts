@@ -1,10 +1,14 @@
 import Arweave from 'arweave';
-import { SmartWeave, SmartWeaveBuilder, SmartWeaveWebFactory } from '../index';
+import { ConfirmationStatus, SmartWeave, SmartWeaveBuilder, SmartWeaveWebFactory } from '../index';
 import { Knex } from 'knex';
 /**
  * A {@link SmartWeave} factory that can be safely used only in Node.js env.
  */
 export declare class SmartWeaveNodeFactory extends SmartWeaveWebFactory {
+    /**
+     * Returns a fully configured, memcached {@link SmartWeave} that is suitable for tests with ArLocal
+     */
+    static forTesting(arweave: Arweave): SmartWeave;
     /**
      * Returns a fully configured {@link SmartWeave} that is using file-based cache for {@link StateEvaluator} layer
      * and mem cache for the rest.
@@ -22,10 +26,10 @@ export declare class SmartWeaveNodeFactory extends SmartWeaveWebFactory {
      * @param maxStoredInMemoryBlockHeights - see {@link fileCached.maxStoredInMemoryBlockHeights}
      *
      */
-    static fileCachedBased(arweave: Arweave, cacheBasePath?: string, maxStoredInMemoryBlockHeights?: number): SmartWeaveBuilder;
+    static fileCachedBased(arweave: Arweave, cacheBasePath?: string, maxStoredInMemoryBlockHeights?: number, confirmationStatus?: ConfirmationStatus): SmartWeaveBuilder;
     static knexCached(arweave: Arweave, dbConnection: Knex, maxStoredInMemoryBlockHeights?: number): Promise<SmartWeave>;
     /**
      */
-    static knexCachedBased(arweave: Arweave, dbConnection: Knex, maxStoredInMemoryBlockHeights?: number): Promise<SmartWeaveBuilder>;
+    static knexCachedBased(arweave: Arweave, dbConnection: Knex, maxStoredInMemoryBlockHeights?: number, confirmationStatus?: ConfirmationStatus): Promise<SmartWeaveBuilder>;
 }
 //# sourceMappingURL=SmartWeaveNodeFactory.d.ts.map

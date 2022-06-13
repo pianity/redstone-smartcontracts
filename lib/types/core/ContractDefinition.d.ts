@@ -6,6 +6,14 @@ import { ContractType } from './modules/CreateContract';
 export declare class ContractMetadata {
     dtor: number;
 }
+export declare type ContractSource = {
+    src: string | null;
+    srcBinary: Buffer | null;
+    srcWasmLang: string | null;
+    contractType: ContractType;
+    srcTx: any;
+    metadata?: ContractMetadata;
+};
 export declare type ContractDefinition<State> = {
     txId: string;
     srcTxId: string;

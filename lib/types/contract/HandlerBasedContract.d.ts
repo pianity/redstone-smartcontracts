@@ -37,7 +37,11 @@ export declare class HandlerBasedContract<State> implements Contract<State> {
     dryWrite<Input>(input: Input, caller?: string, tags?: Tags, transfer?: ArTransfer): Promise<InteractionResult<State, unknown>>;
     dryWriteFromTx<Input>(input: Input, transaction: GQLNodeInterface, currentTx?: CurrentTx[]): Promise<InteractionResult<State, unknown>>;
     writeInteraction<Input>(input: Input, tags?: Tags, transfer?: ArTransfer, strict?: boolean): Promise<string | null>;
-    bundleInteraction<Input>(input: Input, tags?: Tags, strict?: boolean): Promise<any | null>;
+    bundleInteraction<Input>(input: Input, options?: {
+        tags: Tags;
+        strict: boolean;
+        vrf: boolean;
+    }): Promise<any | null>;
     private createInteraction;
     txId(): string;
     getCallStack(): ContractCallStack;

@@ -1,5 +1,6 @@
 import Arweave from 'arweave';
-import { GQLNodeInterface, GQLTagInterface } from './gqlResult';
+import { GQLNodeInterface, GQLTagInterface, VrfData } from './gqlResult';
+import { EvaluationOptions } from '../core/index';
 /**
  *
  * This class is be exposed as a global for contracts
@@ -30,6 +31,8 @@ export declare class SmartWeaveGlobal {
     gasLimit: number;
     transaction: Transaction;
     block: Block;
+    vrf: Vrf;
+    evaluationOptions: EvaluationOptions;
     arweave: Pick<Arweave, 'ar' | 'wallets' | 'utils' | 'crypto'>;
     contract: {
         id: string;
@@ -47,8 +50,9 @@ export declare class SmartWeaveGlobal {
     constructor(arweave: Arweave, contract: {
         id: string;
         owner: string;
-    }, gasLimit?: number);
+    }, evaluationOptions: EvaluationOptions);
     useGas(gas: number): void;
+    getBalance(address: string, height?: number): Promise<string>;
 }
 declare class Transaction {
     private readonly global;
@@ -66,6 +70,13 @@ declare class Block {
     get height(): number;
     get indep_hash(): string;
     get timestamp(): number;
+}
+declare class Vrf {
+    private readonly global;
+    constructor(global: SmartWeaveGlobal);
+    get data(): VrfData;
+    get value(): string;
+    randomInt(maxValue: number): number;
 }
 export {};
 //# sourceMappingURL=smartweave-global.d.ts.map

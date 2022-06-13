@@ -61,12 +61,13 @@ export declare class DefaultEvaluationOptions implements EvaluationOptions {
     stackTrace: {
         saveState: boolean;
     };
-    bundlerAddress: string;
+    bundlerUrl: string;
     gasLimit: number;
     useFastCopy: boolean;
     manualCacheFlush: boolean;
     useVM2: boolean;
     allowUnsafeClient: boolean;
+    walletBalanceUrl: string;
 }
 export interface EvaluationOptions {
     ignoreExceptions: boolean;
@@ -78,11 +79,12 @@ export interface EvaluationOptions {
     stackTrace: {
         saveState: boolean;
     };
-    bundlerAddress: string;
+    bundlerUrl: string;
     gasLimit: number;
     useFastCopy: boolean;
     manualCacheFlush: boolean;
     useVM2: boolean;
     allowUnsafeClient: boolean;
+    walletBalanceUrl: string;
 }
 //# sourceMappingURL=StateEvaluator.d.ts.map

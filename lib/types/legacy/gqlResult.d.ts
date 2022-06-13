@@ -45,6 +45,13 @@ export interface GQLNodeInterface {
     confirmationStatus?: string;
     source?: string;
     bundlerTxId?: string;
+    vrf?: VrfData;
+}
+export interface VrfData {
+    index: string;
+    proof: string;
+    bigint: string;
+    pubkey: string;
 }
 export interface GQLEdgeInterface {
     sortKey?: string;
