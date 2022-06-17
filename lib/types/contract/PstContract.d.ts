@@ -1,6 +1,6 @@
 import { Contract } from '..';
 import { Result } from 'neverthrow';
-import { EvolveState, InteractionError, NoWalletError } from './Contract';
+import { EvolveState, InvalidInteractionError, NoWalletError } from './Contract';
 /**
  * The result from the "balance" view method on the PST Contract.
  */
@@ -44,6 +44,6 @@ export interface PstContract extends Contract<PstState> {
      * allows to transfer PSTs between wallets
      * @param transfer - data required to perform a transfer, see {@link transfer}
      */
-    transfer(transfer: TransferInput): Promise<Result<string, InteractionError | NoWalletError>>;
+    transfer(transfer: TransferInput): Promise<Result<string, InvalidInteractionError | NoWalletError>>;
 }
 //# sourceMappingURL=PstContract.d.ts.map

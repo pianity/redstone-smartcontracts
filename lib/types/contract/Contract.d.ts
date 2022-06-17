@@ -13,12 +13,12 @@ export declare type BenchmarkStats = {
     total: number;
 };
 export declare type SigningFunction = (tx: Transaction) => Promise<void>;
-export declare type InteractionError = {
-    error: 'invalidInteraction';
+export declare type InvalidInteractionError = {
+    type: 'invalidInteraction';
     message: string;
 };
 export declare type NoWalletError = {
-    error: 'noWalletConnected';
+    type: 'noWalletConnected';
 };
 /**
  * Interface describing state for all Evolve-compatible contracts.
@@ -122,7 +122,7 @@ export interface Contract<State = unknown> extends Source {
      * @param transfer - additional {@link ArTransfer} than can be attached to the interaction transaction
      * @param strict - transaction will be posted on Arweave only if the dry-run of the input result is "ok"
      */
-    writeInteraction<Input = unknown>(input: Input, tags?: Tags, transfer?: ArTransfer, strict?: boolean): Promise<Result<string, InteractionError | NoWalletError>>;
+    writeInteraction<Input = unknown>(input: Input, tags?: Tags, transfer?: ArTransfer, strict?: boolean): Promise<Result<string, InvalidInteractionError | NoWalletError>>;
     /**
      * Creates a new "interaction" transaction using Warp Sequencer - this, with combination with
      * Warp Gateway, gives instant transaction availability and finality guaranteed by Bundlr.
@@ -133,7 +133,7 @@ export interface Contract<State = unknown> extends Source {
         tags?: Tags;
         strict?: boolean;
         vrf?: boolean;
-    }): Promise<Result<any, InteractionError | NoWalletError>>;
+    }): Promise<Result<any, InvalidInteractionError | NoWalletError>>;
     /**
      * Returns the full call tree report the last
      * interaction with contract (eg. after reading state)
@@ -195,6 +195,6 @@ export interface Contract<State = unknown> extends Source {
      * and its transaction to be confirmed by the network.
      * @param newSrcTxId - result of the {@link save} method call.
      */
-    evolve(newSrcTxId: string, useBundler?: boolean): Promise<Result<any, InteractionError | NoWalletError>>;
+    evolve(newSrcTxId: string, useBundler?: boolean): Promise<Result<any, InvalidInteractionError | NoWalletError>>;
 }
 //# sourceMappingURL=Contract.d.ts.map

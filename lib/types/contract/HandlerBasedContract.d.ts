@@ -1,4 +1,4 @@
-import { ArTransfer, ArWallet, BenchmarkStats, Contract, ContractCallStack, CurrentTx, EvalStateResult, EvaluationOptions, GQLNodeInterface, InteractionResult, SigningFunction, Warp, Tags, SourceData, InteractionError, NoWalletError } from '..';
+import { ArTransfer, ArWallet, BenchmarkStats, Contract, ContractCallStack, CurrentTx, EvalStateResult, EvaluationOptions, GQLNodeInterface, InteractionResult, SigningFunction, Warp, Tags, SourceData, NoWalletError, InvalidInteractionError } from '..';
 import { NetworkInfoInterface } from 'arweave/node/network';
 import { Result } from 'neverthrow';
 /**
@@ -37,12 +37,12 @@ export declare class HandlerBasedContract<State> implements Contract<State> {
     viewStateForTx<Input, View>(input: Input, interactionTx: GQLNodeInterface): Promise<InteractionResult<State, View>>;
     dryWrite<Input>(input: Input, caller?: string, tags?: Tags, transfer?: ArTransfer): Promise<InteractionResult<State, unknown>>;
     dryWriteFromTx<Input>(input: Input, transaction: GQLNodeInterface, currentTx?: CurrentTx[]): Promise<InteractionResult<State, unknown>>;
-    writeInteraction<Input>(input: Input, tags?: Tags, transfer?: ArTransfer, strict?: boolean): Promise<Result<string, InteractionError | NoWalletError>>;
+    writeInteraction<Input>(input: Input, tags?: Tags, transfer?: ArTransfer, strict?: boolean): Promise<Result<string, InvalidInteractionError | NoWalletError>>;
     bundleInteraction<Input>(input: Input, options?: {
         tags: Tags;
         strict: boolean;
         vrf: boolean;
-    }): Promise<Result<any, InteractionError | NoWalletError>>;
+    }): Promise<Result<any, InvalidInteractionError | NoWalletError>>;
     private createInteraction;
     txId(): string;
     getCallStack(): ContractCallStack;
@@ -63,7 +63,7 @@ export declare class HandlerBasedContract<State> implements Contract<State> {
     lastReadStateStats(): BenchmarkStats;
     stateHash(state: State): string;
     syncState(nodeAddress: string): Promise<Contract>;
-    evolve(newSrcTxId: string, useBundler?: boolean): Promise<Result<any, InteractionError | NoWalletError>>;
+    evolve(newSrcTxId: string, useBundler?: boolean): Promise<Result<any, InvalidInteractionError | NoWalletError>>;
     save(sourceData: SourceData): Promise<any>;
 }
 //# sourceMappingURL=HandlerBasedContract.d.ts.map
