@@ -1,4 +1,4 @@
-import { BlockHeightCacheResult, CurrentTx, ExecutionContext, GQLNodeInterface } from '@smartweave';
+import { BlockHeightCacheResult, CurrentTx, ExecutionContext, GQLNodeInterface } from '@warp';
 
 /**
  * Implementors of this class are responsible for evaluating contract's state
@@ -68,7 +68,7 @@ export interface StateEvaluator {
   flushCache(): Promise<void>;
 
   /**
-   * allows to syncState with an external state source (like RedStone Distributed Execution Network)
+   * allows to syncState with an external state source (like Warp Distributed Execution Network)
    */
   syncState(contractTxId: string, blockHeight: number, transactionId: string, state: any, validity: any): Promise<void>;
 }
@@ -112,7 +112,12 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
 
   manualCacheFlush = false;
 
-  useVM2 = false;
+  useIVM = false;
+
+  ivm = {
+    memoryLimit: 100,
+    timeout: 60000
+  };
 
   allowUnsafeClient = false;
 
@@ -137,7 +142,7 @@ export interface EvaluationOptions {
   // - quite often scenario in FCP)
   // 2. after evaluating all the contract interactions.
 
-  // https://github.com/redstone-finance/redstone-smartcontracts/issues/53
+  // https://github.com/redstone-finance/warp/issues/53
   updateCacheForEachInteraction: boolean;
 
   // a new, experimental enhancement of the protocol that allows for interactWrites from
@@ -173,11 +178,20 @@ export interface EvaluationOptions {
 
   manualCacheFlush: boolean;
 
-  // Whether js contracts' code should be run within vm2 sandbox (https://github.com/patriksimek/vm2#vm2-----)
+  // Whether js contracts' code should be run within isolated-vm sandbox
+  // (https://github.com/laverdet/isolated-vm)
   // it greatly enhances security - at a cost of performance.
   // use for contracts that you cannot trust.
   // this obviously works only in a node.js env.
-  useVM2: boolean;
+  useIVM: boolean;
+
+  // Options for isolated-vm:
+  // memory limit - defaults to 50MB
+  // timeout (script time evaluation limit) - defaults to 60s
+  ivm: {
+    memoryLimit?: number;
+    timeout?: number;
+  };
 
   // Whether using unsafe client should be allowed
   // if set to false - calling unsafe clinet in contract code will
