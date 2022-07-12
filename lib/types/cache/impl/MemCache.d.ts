@@ -1,8 +1,8 @@
-import { SwCache } from '../index';
+import { WarpCache } from '../index';
 /**
  * A simple, in-memory cache, with keys being transaction ids (e.g. contract transaction id).
  */
-export declare class MemCache<V = any> implements SwCache<string, V> {
+export declare class MemCache<V = any> implements WarpCache<string, V> {
     private readonly storage;
     clearAll(): void;
     contains(key: string): boolean;

@@ -1,8 +1,8 @@
-import { BlockHeightCacheResult, BlockHeightKey, BlockHeightSwCache } from '../index';
+import { BlockHeightCacheResult, BlockHeightKey, BlockHeightWarpCache } from '../index';
 /**
- * A simple, in-memory cache implementation of the BlockHeightSwCache
+ * A simple, in-memory cache implementation of the BlockHeightWarpCache
  */
-export declare class MemBlockHeightSwCache<V = any> implements BlockHeightSwCache<V> {
+export declare class MemBlockHeightWarpCache<V = any> implements BlockHeightWarpCache<V> {
     private maxStoredBlockHeights;
     private readonly logger;
     protected storage: {

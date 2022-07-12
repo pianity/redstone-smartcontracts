@@ -1,11 +1,11 @@
-import { ArweaveWrapper, ContractDefinition, ContractSource, DefinitionLoader, SwCache } from '../../..';
+import { ArweaveWrapper, ContractDefinition, ContractSource, DefinitionLoader, WarpCache } from '../../..';
 import Arweave from 'arweave';
 export declare class ContractDefinitionLoader implements DefinitionLoader {
     private readonly arweave;
-    protected readonly cache?: SwCache<string, ContractDefinition<unknown>>;
+    protected readonly cache?: WarpCache<string, ContractDefinition<unknown>>;
     private readonly logger;
     protected arweaveWrapper: ArweaveWrapper;
-    constructor(arweave: Arweave, cache?: SwCache<string, ContractDefinition<unknown>>);
+    constructor(arweave: Arweave, cache?: WarpCache<string, ContractDefinition<unknown>>);
     load<State>(contractTxId: string, evolvedSrcTxId?: string): Promise<ContractDefinition<State>>;
     doLoad<State>(contractTxId: string, forcedSrcTxId?: string): Promise<ContractDefinition<State>>;
     loadContractSource(contractSrcTxId: string): Promise<ContractSource>;

@@ -1,5 +1,5 @@
-import { LoggerSettings, LogLevel, RedStoneLogger } from '../..';
-export declare class ConsoleLogger implements RedStoneLogger {
+import { LoggerSettings, LogLevel, WarpLogger } from '../..';
+export declare class ConsoleLogger implements WarpLogger {
     private readonly moduleName;
     settings: LoggerSettings;
     constructor(moduleName: any, settings: LoggerSettings);

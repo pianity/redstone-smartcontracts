@@ -1,12 +1,12 @@
-import { BlockHeightCacheResult, BlockHeightKey, BlockHeightSwCache } from '../index';
+import { BlockHeightCacheResult, BlockHeightKey, BlockHeightWarpCache } from '../index';
 /**
- * A {@link BlockHeightSwCache} implementation that delegates all its methods
+ * A {@link BlockHeightWarpCache} implementation that delegates all its methods
  * to remote endpoints.
  *
  * TODO: this could be further optimised - i.e. with the help of "level 1" memory cache
  * that would store max X elements - and would be backed up by the "level 2" remote cache.
  */
-export declare class RemoteBlockHeightCache<V = any> implements BlockHeightSwCache<V> {
+export declare class RemoteBlockHeightCache<V = any> implements BlockHeightWarpCache<V> {
     private type;
     private baseURL;
     private axios;

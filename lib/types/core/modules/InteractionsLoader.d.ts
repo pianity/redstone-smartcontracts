@@ -1,7 +1,10 @@
 import { EvaluationOptions, GQLEdgeInterface } from '../..';
-import { CustomError } from '../../utils/index';
-export declare type InteractionsLoaderErrorKind = 'BadGatewayResponse500' | 'BadGatewayResponse504' | 'BadGatewayResponse';
-export declare class InteractionsLoaderError extends CustomError<InteractionsLoaderErrorKind> {
+import { CustomError, Err } from '../../utils/index';
+export declare type BadGatewayResponse = Err<'BadGatewayResponse'> & {
+    status: number;
+};
+export declare type InteractionsLoaderErrorDetail = BadGatewayResponse;
+export declare class InteractionsLoaderError extends CustomError<InteractionsLoaderErrorDetail> {
 }
 /**
  * Implementors of this interface add functionality of loading contract's interaction transactions.

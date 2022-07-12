@@ -1,12 +1,12 @@
-import { BlockHeightKey, MemBlockHeightSwCache } from '../index';
+import { BlockHeightKey, MemBlockHeightWarpCache } from '../index';
 import { Knex } from 'knex';
 import { StateCache } from '../..';
 /**
- * An implementation of {@link BlockHeightSwCache} that stores its data (ie. contracts state)
+ * An implementation of {@link BlockHeightWarpCache} that stores its data (ie. contracts state)
  * in a Knex-compatible storage (PostgreSQL, CockroachDB, MSSQL, MySQL, MariaDB, SQLite3, Oracle, and Amazon Redshift)
  * https://knexjs.org
  */
-export declare class KnexStateCache extends MemBlockHeightSwCache<StateCache<any>> {
+export declare class KnexStateCache extends MemBlockHeightWarpCache<StateCache<any>> {
     private readonly knex;
     private readonly kLogger;
     private readonly lastFlushHeight;

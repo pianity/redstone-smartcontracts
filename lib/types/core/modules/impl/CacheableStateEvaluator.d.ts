@@ -1,4 +1,4 @@
-import { BlockHeightCacheResult, BlockHeightSwCache } from '../../../cache/index';
+import { BlockHeightCacheResult, BlockHeightWarpCache } from '../../../cache/index';
 import { DefaultStateEvaluator, EvalStateResult, ExecutionContext, ExecutionContextModifier, HandlerApi, StateCache } from '../../index';
 import Arweave from 'arweave';
 import { GQLNodeInterface } from '../../../legacy/index';
@@ -14,7 +14,7 @@ import { CurrentTx } from '../../../contract/index';
 export declare class CacheableStateEvaluator extends DefaultStateEvaluator {
     private readonly cache;
     private readonly cLogger;
-    constructor(arweave: Arweave, cache: BlockHeightSwCache<StateCache<unknown>>, executionContextModifiers?: ExecutionContextModifier[]);
+    constructor(arweave: Arweave, cache: BlockHeightWarpCache<StateCache<unknown>>, executionContextModifiers?: ExecutionContextModifier[]);
     eval<State>(executionContext: ExecutionContext<State, HandlerApi<State>>, currentTx: CurrentTx[]): Promise<EvalStateResult<State>>;
     onStateEvaluated<State>(transaction: GQLNodeInterface, executionContext: ExecutionContext<State>, state: EvalStateResult<State>): Promise<void>;
     onStateUpdate<State>(transaction: GQLNodeInterface, executionContext: ExecutionContext<State>, state: EvalStateResult<State>, nthInteraction?: number): Promise<void>;

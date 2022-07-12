@@ -1,4 +1,4 @@
-import { ArTransfer, ArWallet, BenchmarkStats, Contract, ContractCallStack, CurrentTx, EvalStateResult, EvaluationOptions, GQLNodeInterface, InteractionResult, SigningFunction, SmartWeave, Tags } from '..';
+import { ArTransfer, ArWallet, BenchmarkStats, Contract, ContractCallStack, CurrentTx, EvalStateResult, EvaluationOptions, GQLNodeInterface, InteractionResult, SigningFunction, Warp, Tags, SourceData } from '..';
 import { NetworkInfoInterface } from 'arweave/node/network';
 /**
  * An implementation of {@link Contract} that is backwards compatible with current style
@@ -8,7 +8,7 @@ import { NetworkInfoInterface } from 'arweave/node/network';
  */
 export declare class HandlerBasedContract<State> implements Contract<State> {
     private readonly _contractTxId;
-    protected readonly smartweave: SmartWeave;
+    protected readonly warp: Warp;
     private readonly _parentContract;
     private readonly _callingInteraction;
     private readonly logger;
@@ -29,7 +29,7 @@ export declare class HandlerBasedContract<State> implements Contract<State> {
      * wallet connected to this contract
      */
     protected signer?: SigningFunction;
-    constructor(_contractTxId: string, smartweave: SmartWeave, _parentContract?: Contract, _callingInteraction?: GQLNodeInterface);
+    constructor(_contractTxId: string, warp: Warp, _parentContract?: Contract, _callingInteraction?: GQLNodeInterface);
     readState(blockHeight?: number, currentTx?: CurrentTx[]): Promise<EvalStateResult<State>>;
     readStateSequencer(blockHeight: number, upToTransactionId: string, currentTx?: CurrentTx[]): Promise<EvalStateResult<State>>;
     viewState<Input, View>(input: Input, blockHeight?: number, tags?: Tags, transfer?: ArTransfer): Promise<InteractionResult<State, View>>;
@@ -62,5 +62,7 @@ export declare class HandlerBasedContract<State> implements Contract<State> {
     lastReadStateStats(): BenchmarkStats;
     stateHash(state: State): string;
     syncState(nodeAddress: string): Promise<Contract>;
+    evolve(newSrcTxId: string, useBundler?: boolean): Promise<string | null>;
+    save(sourceData: SourceData): Promise<any>;
 }
 //# sourceMappingURL=HandlerBasedContract.d.ts.map

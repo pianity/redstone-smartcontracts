@@ -2,7 +2,7 @@ import { ContractDefinition, EvaluationOptions } from '../..';
 export interface ContractApi {
 }
 /**
- * An interface for all the factories that produce SmartWeave contracts "executors" -
+ * An interface for all the factories that produce Warp contracts "executors" -
  * i.e. objects that are responsible for actually running the contract's code.
  */
 export interface ExecutorFactory<Api> {

@@ -1,4 +1,4 @@
-import { BlockHeightCacheResult, Contract, ContractDefinition, EvalStateResult, EvaluationOptions, GQLEdgeInterface, SmartWeave } from '..';
+import { BlockHeightCacheResult, Contract, ContractDefinition, EvalStateResult, EvaluationOptions, GQLEdgeInterface, Warp } from '..';
 import { NetworkInfoInterface } from 'arweave/node/network';
 import { BlockData } from 'arweave/node/blocks';
 /**
@@ -10,9 +10,9 @@ import { BlockData } from 'arweave/node/blocks';
  */
 export declare type ExecutionContext<State, Api = unknown> = {
     /**
-     * {@link SmartWeave} client currently being used
+     * {@link Warp} client currently being used
      */
-    smartweave: SmartWeave;
+    warp: Warp;
     /**
      * {@link Contract} related to this execution context
      */

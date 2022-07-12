@@ -1,4 +1,4 @@
-import { ILoggerFactory, LoggerSettings, RedStoneLogger } from '../..';
+import { ILoggerFactory, LoggerSettings, WarpLogger } from '../..';
 import { LogLevel } from '../LoggerSettings';
 export declare class ConsoleLoggerFactory implements ILoggerFactory {
     private registeredLoggers;
@@ -8,6 +8,6 @@ export declare class ConsoleLoggerFactory implements ILoggerFactory {
     setOptions(newOptions: LoggerSettings, moduleName?: string): void;
     getOptions(moduleName?: string): LoggerSettings;
     logLevel(level: LogLevel, moduleName?: string): void;
-    create(moduleName?: string): RedStoneLogger;
+    create(moduleName?: string): WarpLogger;
 }
 //# sourceMappingURL=ConsoleLoggerFactory.d.ts.map

@@ -40,7 +40,7 @@ export interface StateEvaluator {
      */
     flushCache(): Promise<void>;
     /**
-     * allows to syncState with an external state source (like RedStone Distributed Execution Network)
+     * allows to syncState with an external state source (like Warp Distributed Execution Network)
      */
     syncState(contractTxId: string, blockHeight: number, transactionId: string, state: any, validity: any): Promise<void>;
 }

@@ -1,5 +1,5 @@
 import { ISettingsParam } from 'tslog';
-import { RedStoneLogger } from '../RedStoneLogger';
+import { WarpLogger } from '../WarpLogger';
 import { ILoggerFactory, LogLevel } from '../..';
 export declare const defaultLoggerOptions: ISettingsParam;
 /**
@@ -14,6 +14,6 @@ export declare class TsLogFactory implements ILoggerFactory {
     setOptions(newOptions: ISettingsParam, moduleName?: string): void;
     getOptions(moduleName?: string): ISettingsParam;
     logLevel(level: LogLevel, moduleName?: string): void;
-    create(moduleName?: string): RedStoneLogger;
+    create(moduleName?: string): WarpLogger;
 }
 //# sourceMappingURL=TsLogFactory.d.ts.map
