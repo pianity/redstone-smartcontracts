@@ -1,38 +1,56 @@
 import {
   ArTransfer,
   ArWallet,
+  BadGatewayResponse,
   ContractCallStack,
   EvalStateResult,
   EvaluationOptions,
   GQLNodeInterface,
   InteractionResult,
   Tags
-} from '@smartweave';
-import { CustomError } from '@smartweave/utils';
+} from '@warp';
+import { CustomError, Err } from '@warp/utils';
 import { NetworkInfoInterface } from 'arweave/node/network';
 import Transaction from 'arweave/node/lib/transaction';
+import { Source } from './deploy/Source';
 
 export type CurrentTx = { interactionTxId: string; contractTxId: string };
 export type BenchmarkStats = { gatewayCommunication: number; stateEvaluation: number; total: number };
 
 export type SigningFunction = (tx: Transaction) => Promise<void>;
 
-export type ContractErrorKind = 'NoWalletConnected';
+// Make these two error cases individual as they could be used in different places
+export type NoWalletConnected = Err<'NoWalletConnected'>;
+export type InvalidInteraction = Err<'InvalidInteraction'>;
 
-export type CreateInteractionErrorKind = 'InvalidInteraction';
+export type BundleInteractionErrorDetail =
+  | NoWalletConnected
+  | InvalidInteraction
+  | BadGatewayResponse
+  | Err<'CannotBundle'>;
+export class BundleInteractionError extends CustomError<BundleInteractionErrorDetail> {}
 
-export type BundleInteractionErrorKind =
-  | ContractErrorKind
-  | CreateInteractionErrorKind
-  | 'BadGatewayResponse'
-  | 'CannotBundle';
-export class BundleInteractionError extends CustomError<BundleInteractionErrorKind> {}
+/**
+ * Interface describing state for all Evolve-compatible contracts.
+ */
+export interface EvolveState {
+  settings: any[] | unknown | null;
+  /**
+   * whether contract is allowed to evolve. seems to default to true..
+   */
+  canEvolve: boolean;
+
+  /**
+   * the transaction id of the Arweave transaction with the updated source code.
+   */
+  evolve: string;
+}
 
 /**
  * A base interface to be implemented by SmartWeave Contracts clients
  * - contains "low-level" methods that allow to interact with any contract
  */
-export interface Contract<State = unknown> {
+export interface Contract<State = unknown> extends Source {
   /**
    * Returns the Arweave transaction id of this contract.
    */
@@ -154,8 +172,8 @@ export interface Contract<State = unknown> {
   ): Promise<string | null>;
 
   /**
-   * Creates a new "interaction" transaction using RedStone Sequencer - this, with combination with
-   * RedStone Gateway, gives instant transaction availability and finality guaranteed by Bundlr.
+   * Creates a new "interaction" transaction using Warp Sequencer - this, with combination with
+   * Warp Gateway, gives instant transaction availability and finality guaranteed by Bundlr.
    * @param input -  new input to the contract that will be assigned with this interactions transaction
    * @param options
    */
@@ -229,4 +247,14 @@ export interface Contract<State = unknown> {
    * @param nodeAddress - distributed execution network node address
    */
   syncState(nodeAddress: string): Promise<Contract>;
+
+  /**
+   * Evolve is a feature that allows to change contract's source
+   * code, without having to deploy a new contract.
+   * This method effectively evolves the contract to the source.
+   * This requires the {@link save} to be called first
+   * and its transaction to be confirmed by the network.
+   * @param newSrcTxId - result of the {@link save} method call.
+   */
+  evolve(newSrcTxId: string, useBundler?: boolean): Promise<string | null>;
 }
