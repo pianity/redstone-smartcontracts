@@ -60,7 +60,13 @@ describe.each(chunked)('v1 compare.suite %#', (contracts: string[]) => {
           },
           'mainnet'
         )
-          .useWarpGateway({ ...defaultWarpGwOptions, source: SourceType.ARWEAVE, confirmationStatus: null })
+          .useWarpGateway(
+            { ...defaultWarpGwOptions, source: SourceType.ARWEAVE, confirmationStatus: null },
+            {
+              ...defaultCacheOptions,
+              inMemory: true
+            }
+          )
           .build()
           .contract(contractTxId)
           .setEvaluationOptions({
@@ -97,7 +103,13 @@ describe.each(chunkedVm)('v1 compare.suite (VM2) %#', (contracts: string[]) => {
         },
         'mainnet'
       )
-        .useWarpGateway({ ...defaultWarpGwOptions, source: SourceType.ARWEAVE, confirmationStatus: null })
+        .useWarpGateway(
+          { ...defaultWarpGwOptions, source: SourceType.ARWEAVE, confirmationStatus: null },
+          {
+            ...defaultCacheOptions,
+            inMemory: true
+          }
+        )
         .build()
         .contract(contractTxId)
         .setEvaluationOptions({
@@ -130,7 +142,13 @@ describe.each(chunkedGw)('gateways compare.suite %#', (contracts: string[]) => {
         },
         'mainnet'
       )
-        .useWarpGateway({ ...defaultWarpGwOptions, source: SourceType.ARWEAVE, confirmationStatus: null })
+        .useWarpGateway(
+          { ...defaultWarpGwOptions, source: SourceType.ARWEAVE, confirmationStatus: null },
+          {
+            ...defaultCacheOptions,
+            inMemory: true
+          }
+        )
         .build();
       const result = await warpR
         .contract(contractTxId)
@@ -182,7 +200,13 @@ describe('readState', () => {
       },
       'mainnet'
     )
-      .useWarpGateway({ ...defaultWarpGwOptions, source: SourceType.ARWEAVE, confirmationStatus: null })
+      .useWarpGateway(
+        { ...defaultWarpGwOptions, source: SourceType.ARWEAVE, confirmationStatus: null },
+        {
+          ...defaultCacheOptions,
+          inMemory: true
+        }
+      )
       .build()
       .contract(contractTxId)
       .setEvaluationOptions({
@@ -210,7 +234,13 @@ describe('readState', () => {
       },
       'mainnet'
     )
-      .useWarpGateway({ ...defaultWarpGwOptions, source: SourceType.ARWEAVE, confirmationStatus: null })
+      .useWarpGateway(
+        { ...defaultWarpGwOptions, source: SourceType.ARWEAVE, confirmationStatus: null },
+        {
+          ...defaultCacheOptions,
+          inMemory: true
+        }
+      )
       .build()
       .contract(contractTxId)
       .connect(jwk)
