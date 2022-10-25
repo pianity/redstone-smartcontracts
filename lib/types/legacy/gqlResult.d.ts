@@ -42,6 +42,7 @@ export interface GQLNodeInterface {
     };
     dry?: boolean;
     sortKey?: string;
+    strict?: boolean;
     confirmationStatus?: string;
     source?: string;
     bundlerTxId?: string;
@@ -54,7 +55,6 @@ export interface VrfData {
     pubkey: string;
 }
 export interface GQLEdgeInterface {
-    sortKey?: string;
     cursor: string;
     node: GQLNodeInterface;
 }

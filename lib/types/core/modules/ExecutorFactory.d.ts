@@ -1,4 +1,5 @@
-import { ContractDefinition, EvaluationOptions } from '../..';
+import { ContractDefinition } from '../../core/ContractDefinition';
+import { EvaluationOptions } from './StateEvaluator';
 export interface ContractApi {
 }
 /**

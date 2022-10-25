@@ -1,5 +1,4 @@
-import { Contract } from '..';
-import { EvolveState } from './Contract';
+import { Contract, EvolveState, WriteInteractionOptions, WriteInteractionResponse } from './Contract';
 /**
  * The result from the "balance" view method on the PST Contract.
  */
@@ -43,6 +42,6 @@ export interface PstContract extends Contract<PstState> {
      * allows to transfer PSTs between wallets
      * @param transfer - data required to perform a transfer, see {@link transfer}
      */
-    transfer(transfer: TransferInput): Promise<string | null>;
+    transfer(transfer: TransferInput, options?: WriteInteractionOptions): Promise<WriteInteractionResponse | null>;
 }
 //# sourceMappingURL=PstContract.d.ts.map

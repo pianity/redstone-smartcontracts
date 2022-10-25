@@ -1,7 +1,8 @@
-/// <reference types="node" />
-import { Source, SigningFunction } from '../../..';
 import Arweave from 'arweave';
 import { ArWallet } from '../CreateContract';
+import { SigningFunction } from '../../../contract/Contract';
+import { Source } from '../Source';
+import { Buffer } from 'redstone-isomorphic';
 export interface SourceData {
     src: string | Buffer;
     wasmSrcCodeDir?: string;

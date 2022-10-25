@@ -1,4 +1,5 @@
-import { LoggerSettings, LogLevel, WarpLogger } from '../..';
+import { LoggerSettings, LogLevel } from '../../logging/LoggerSettings';
+import { WarpLogger } from '../../logging/WarpLogger';
 export declare class ConsoleLogger implements WarpLogger {
     private readonly moduleName;
     settings: LoggerSettings;

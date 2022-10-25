@@ -1,4 +1,6 @@
-import { ArWallet, SigningFunction, SourceData } from '../..';
+import { SigningFunction } from '../../contract/Contract';
+import { ArWallet } from './CreateContract';
+import { SourceData } from './impl/SourceImpl';
 export interface Source {
     /**
      * allows to post contract source on Arweave

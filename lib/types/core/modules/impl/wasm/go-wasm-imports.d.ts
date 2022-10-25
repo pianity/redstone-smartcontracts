@@ -1,4 +1,4 @@
-import { SmartWeaveGlobal } from '../../../..';
+import { SmartWeaveGlobal } from '../../../../legacy/smartweave-global';
 export declare class Go {
     private _callbackTimeouts;
     private _nextCallbackTimeoutID;

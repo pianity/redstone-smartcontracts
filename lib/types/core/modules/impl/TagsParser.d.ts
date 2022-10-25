@@ -1,4 +1,4 @@
-import { GQLEdgeInterface, GQLTagInterface } from '../../..';
+import { GQLNodeInterface, GQLTagInterface } from '../../../legacy/gqlResult';
 /**
  * A class that is responsible for retrieving "input" tag from the interaction transaction.
  * Two tags formats are allowed:
@@ -10,11 +10,11 @@ import { GQLEdgeInterface, GQLTagInterface } from '../../..';
  */
 export declare class TagsParser {
     private readonly logger;
-    getInputTag(interactionTransaction: GQLEdgeInterface, contractTxId: string): GQLTagInterface;
-    isInteractWrite(interactionTransaction: GQLEdgeInterface, contractTxId: string): boolean;
-    getInteractWritesContracts(interactionTransaction: GQLEdgeInterface): string[];
-    getContractTag(interactionTransaction: GQLEdgeInterface): string;
-    getContractsWithInputs(interactionTransaction: GQLEdgeInterface): Map<string, GQLTagInterface>;
-    static hasMultipleInteractions(interactionTransaction: any): boolean;
+    getInputTag(interactionTransaction: GQLNodeInterface, contractTxId: string): GQLTagInterface;
+    isInteractWrite(interactionTransaction: GQLNodeInterface, contractTxId: string): boolean;
+    getInteractWritesContracts(interactionTransaction: GQLNodeInterface): string[];
+    getContractTag(interactionTransaction: GQLNodeInterface): string;
+    getContractsWithInputs(interactionTransaction: GQLNodeInterface): Map<string, GQLTagInterface>;
+    static hasMultipleInteractions(interactionTransaction: GQLNodeInterface): boolean;
 }
 //# sourceMappingURL=TagsParser.d.ts.map

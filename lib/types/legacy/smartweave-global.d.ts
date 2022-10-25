@@ -1,9 +1,9 @@
 import Arweave from 'arweave';
+import { EvaluationOptions } from '../core/modules/StateEvaluator';
 import { GQLNodeInterface, GQLTagInterface, VrfData } from './gqlResult';
-import { EvaluationOptions } from '../core/index';
 /**
  *
- * This class is be exposed as a global for contracts
+ * This class is exposed as a global for contracts
  * as 'SmartWeave' and provides an API for getting further
  * information or using utility and crypto functions from
  * inside the contracts execution.
@@ -55,8 +55,8 @@ export declare class SmartWeaveGlobal {
     getBalance(address: string, height?: number): Promise<string>;
 }
 declare class Transaction {
-    private readonly global;
-    constructor(global: SmartWeaveGlobal);
+    private readonly smartWeaveGlobal;
+    constructor(smartWeaveGlobal: SmartWeaveGlobal);
     get id(): string;
     get owner(): string;
     get target(): string;
@@ -65,15 +65,15 @@ declare class Transaction {
     get reward(): string;
 }
 declare class Block {
-    private readonly global;
-    constructor(global: SmartWeaveGlobal);
+    private readonly smartWeaveGlobal;
+    constructor(smartWeaveGlobal: SmartWeaveGlobal);
     get height(): number;
     get indep_hash(): string;
     get timestamp(): number;
 }
 declare class Vrf {
-    private readonly global;
-    constructor(global: SmartWeaveGlobal);
+    private readonly smartWeaveGlobal;
+    constructor(smartWeaveGlobal: SmartWeaveGlobal);
     get data(): VrfData;
     get value(): string;
     randomInt(maxValue: number): number;

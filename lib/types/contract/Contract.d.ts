@@ -1,7 +1,12 @@
-import { ArTransfer, ArWallet, BadGatewayResponse, ContractCallStack, EvalStateResult, EvaluationOptions, GQLNodeInterface, InteractionResult, Tags } from '..';
-import { CustomError, Err } from '../utils/index';
-import { NetworkInfoInterface } from 'arweave/node/network';
+import { BadGatewayResponse } from '../core/modules/InteractionsLoader';
+import { CustomError, Err } from '../utils/CustomError';
 import Transaction from 'arweave/node/lib/transaction';
+import { SortKeyCacheResult } from '../cache/SortKeyCache';
+import { ContractCallRecord } from '../core/ContractCallRecord';
+import { InteractionResult } from '../core/modules/impl/HandlerExecutorFactory';
+import { EvaluationOptions, EvalStateResult } from '../core/modules/StateEvaluator';
+import { GQLNodeInterface } from '../legacy/gqlResult';
+import { ArTransfer, Tags, ArWallet } from './deploy/CreateContract';
 import { Source } from './deploy/Source';
 export declare type CurrentTx = {
     interactionTxId: string;
@@ -18,13 +23,36 @@ export declare type InvalidInteraction = Err<'InvalidInteraction'>;
 export declare type BundleInteractionErrorDetail = NoWalletConnected | InvalidInteraction | BadGatewayResponse | Err<'CannotBundle'>;
 export declare class BundleInteractionError extends CustomError<BundleInteractionErrorDetail> {
 }
+interface BundlrResponse {
+    id: string;
+    public: string;
+    signature: string;
+    block: number;
+}
+export interface WriteInteractionResponse {
+    bundlrResponse?: BundlrResponse;
+    originalTxId: string;
+}
+export declare type WarpOptions = {
+    vrf?: boolean;
+    disableBundling?: boolean;
+};
+export declare type ArweaveOptions = {
+    transfer?: ArTransfer;
+    reward?: string;
+};
+export declare type CommonOptions = {
+    tags?: Tags;
+    strict?: boolean;
+};
+export declare type WriteInteractionOptions = WarpOptions & ArweaveOptions & CommonOptions;
 /**
  * Interface describing state for all Evolve-compatible contracts.
  */
 export interface EvolveState {
     settings: any[] | unknown | null;
     /**
-     * whether contract is allowed to evolve. seems to default to true..
+     * whether contract is allowed to evolve.
      */
     canEvolve: boolean;
     /**
@@ -32,6 +60,11 @@ export interface EvolveState {
      */
     evolve: string;
 }
+export declare type InnerCallType = 'read' | 'view' | 'write';
+export declare type InnerCallData = {
+    callingInteraction: GQLNodeInterface;
+    callType: InnerCallType;
+};
 /**
  * A base interface to be implemented by SmartWeave Contracts clients
  * - contains "low-level" methods that allow to interact with any contract
@@ -57,21 +90,18 @@ export interface Contract<State = unknown> extends Source {
      */
     setEvaluationOptions(options: Partial<EvaluationOptions>): Contract<State>;
     /**
-     * Returns state of the contract at required blockHeight.
-     * Similar to {@link readContract} from the current version.
+     * Returns state of the contract at required sortKey or blockHeight.
      *
-     * @param blockHeight - block height at which state should be read. If not passed
-     * current Arweave block height from the network info will be used.
+     * @param sortKeyOrBlockHeight - either a sortKey or block height at which the contract should be read
      *
      * @param currentTx - a set of currently evaluating interactions, that should
      * be skipped during contract inner calls - to prevent the infinite call loop issue
-     * (mostly related to contracts that use the Foreign Call Protocol)
+     * (mostly related to contract that use the Foreign Call Protocol)
      */
-    readState(blockHeight?: number, currentTx?: CurrentTx[]): Promise<EvalStateResult<State>>;
-    readStateSequencer(blockHeight: number, upToTransactionId: string, currentTx?: CurrentTx[]): Promise<EvalStateResult<State>>;
+    readState(sortKeyOrBlockHeight?: string | number, currentTx?: CurrentTx[], interactions?: GQLNodeInterface[]): Promise<SortKeyCacheResult<EvalStateResult<State>>>;
     /**
      * Returns the "view" of the state, computed by the SWC -
-     * ie. object that is a derivative of a current state and some specific
+     * i.e. object that is a derivative of a current state and some specific
      * smart contract business logic.
      * Similar to the "interactRead" from the current SDK version.
      *
@@ -80,13 +110,11 @@ export interface Contract<State = unknown> extends Source {
      * with specified input.
      *
      * @param input - the input to the contract - eg. function name and parameters
-     * @param blockHeight - the height at which the contract state will be evaluated
-     * before applying last interaction transaction - ie. transaction with 'input'
      * @param tags - a set of tags that can be added to the interaction transaction
      * @param transfer - additional {@link ArTransfer} data that can be attached to the interaction
      * transaction
      */
-    viewState<Input = unknown, View = unknown>(input: Input, blockHeight?: number, tags?: Tags, transfer?: ArTransfer): Promise<InteractionResult<State, View>>;
+    viewState<Input = unknown, View = unknown>(input: Input, tags?: Tags, transfer?: ArTransfer): Promise<InteractionResult<State, View>>;
     /**
      * A version of the viewState method to be used from within the contract's source code.
      * The transaction passed as an argument is the currently processed interaction transaction.
@@ -113,45 +141,14 @@ export interface Contract<State = unknown> extends Source {
     dryWrite<Input>(input: Input, caller?: string, tags?: Tags, transfer?: ArTransfer): Promise<InteractionResult<State, unknown>>;
     dryWriteFromTx<Input>(input: Input, transaction: GQLNodeInterface, currentTx?: CurrentTx[]): Promise<InteractionResult<State, unknown>>;
     /**
-     * Writes a new "interaction" transaction - ie. such transaction that stores input for the contract.
-     *
-     * @param input -  new input to the contract that will be assigned with this interactions transaction
-     * @param tags - additional tags that can be attached to the newly created interaction transaction
-     * @param transfer - additional {@link ArTransfer} than can be attached to the interaction transaction
-     * @param strict - transaction will be posted on Arweave only if the dry-run of the input result is "ok"
+     * Writes a new "interaction" transaction - i.e. such transaction that stores input for the contract.
      */
-    writeInteraction<Input = unknown>(input: Input, tags?: Tags, transfer?: ArTransfer, strict?: boolean): Promise<string | null>;
-    /**
-     * Creates a new "interaction" transaction using Warp Sequencer - this, with combination with
-     * Warp Gateway, gives instant transaction availability and finality guaranteed by Bundlr.
-     * @param input -  new input to the contract that will be assigned with this interactions transaction
-     * @param options
-     */
-    bundleInteraction<Input = unknown>(input: Input, options?: {
-        tags?: Tags;
-        strict?: boolean;
-        vrf?: boolean;
-    }): Promise<any | null>;
+    writeInteraction<Input = unknown>(input: Input, options?: WriteInteractionOptions): Promise<WriteInteractionResponse | null>;
     /**
      * Returns the full call tree report the last
      * interaction with contract (eg. after reading state)
      */
-    getCallStack(): ContractCallStack;
-    /**
-     * Gets network info assigned to this contract.
-     * Network info is refreshed between interactions with
-     * given contract (eg. between consecutive calls to {@link Contract.readState})
-     * but reused within given execution tree (ie. only "root" contract loads the
-     * network info - eg. if readState calls other contracts, these calls will use the
-     * "root" contract network info - so that the whole execution is performed with the
-     * same network info)
-     */
-    getNetworkInfo(): Partial<NetworkInfoInterface>;
-    /**
-     * Get the block height requested by user for the given interaction with contract
-     * (eg. readState or viewState call)
-     */
-    getRootBlockHeight(): number | null;
+    getCallStack(): ContractCallRecord;
     /**
      * Gets the parent contract - ie. contract that called THIS contract during the
      * state evaluation.
@@ -159,7 +156,7 @@ export interface Contract<State = unknown> extends Source {
     parent(): Contract | null;
     /**
      * Return the depth of the call to this contract.
-     * Eg.
+     * E.g.
      * 1. User calls ContractA.readState() - depth = 0
      * 2. ContractA.readState() calls ContractB.readState() - depth = 1
      * 3. ContractB.readState calls ContractC.readState() - depth = 2
@@ -180,11 +177,12 @@ export interface Contract<State = unknown> extends Source {
      */
     stateHash(state: State): string;
     /**
-     * this method allows to sync the state of the local SDK state with the Execution Network -
-     * to make features like "viewStates" possible when using EN;
-     * @param nodeAddress - distributed execution network node address
+     * this method allows to sync the state of the local SDK state with the state provided by an external endpoint;
+     * @param externalUrl - external endpoint url
+     * @param params - by default only query param with `contractId` is set by SDK, any additional ones can be passed
+     * in the `params` object
      */
-    syncState(nodeAddress: string): Promise<Contract>;
+    syncState(externalUrl: string, params?: any): Promise<Contract>;
     /**
      * Evolve is a feature that allows to change contract's source
      * code, without having to deploy a new contract.
@@ -193,6 +191,8 @@ export interface Contract<State = unknown> extends Source {
      * and its transaction to be confirmed by the network.
      * @param newSrcTxId - result of the {@link save} method call.
      */
-    evolve(newSrcTxId: string, useBundler?: boolean): Promise<string | null>;
+    evolve(newSrcTxId: string, options?: WriteInteractionOptions): Promise<WriteInteractionResponse | null>;
+    rootSortKey: string;
 }
+export {};
 //# sourceMappingURL=Contract.d.ts.map

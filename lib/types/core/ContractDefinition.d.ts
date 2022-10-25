@@ -1,8 +1,8 @@
-/// <reference types="node" />
 /**
  * This type contains all data and meta-data of the given contact.
  */
-import { ContractType } from '../contract/index';
+/// <reference types="node" />
+import { ContractType } from '../contract/deploy/CreateContract';
 export declare class ContractMetadata {
     dtor: number;
 }

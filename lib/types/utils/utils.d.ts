@@ -1,3 +1,4 @@
+import { Buffer } from 'redstone-isomorphic';
 export declare const sleep: (ms: number) => Promise<void>;
 export declare const deepCopy: (input: unknown, useFastCopy?: boolean) => any;
 export declare const mapReplacer: (key: unknown, value: unknown) => unknown;
@@ -11,4 +12,7 @@ export declare function timeout(s: number): {
     timeoutPromise: Promise<any>;
 };
 export declare function stripTrailingSlash(str: string): string;
+export declare function indent(callDepth: number): string;
+export declare function bufToBn(buf: Buffer): bigint;
+export declare function isomorphicRandomUUID(): string;
 //# sourceMappingURL=utils.d.ts.map

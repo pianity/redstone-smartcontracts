@@ -1,4 +1,5 @@
-import { LogLevel, WarpLogger } from './index';
+import { LogLevel } from './LoggerSettings';
+import { WarpLogger } from './WarpLogger';
 export interface ILoggerFactory {
     setOptions(newOptions: any, moduleName?: string): void;
     getOptions(moduleName?: string): any;

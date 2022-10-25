@@ -6,12 +6,12 @@ export declare const LogLevelOrder: {
     warn: number;
     error: number;
     fatal: number;
+    none: number;
 };
 /**
- * Log level names (silly - fatal)
- * // FIXME: generate from LogLevelOrder with some TS trickery..
+ * Log level names (silly - none)
  */
-export declare type LogLevel = 'silly' | 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal';
+export declare type LogLevel = 'silly' | 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal' | 'none';
 export interface LoggerSettings {
     minLevel: LogLevel;
 }

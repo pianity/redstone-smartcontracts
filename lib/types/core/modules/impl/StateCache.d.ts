@@ -1,4 +1,3 @@
-import { EvalStateResult, GQLNodeInterface } from '../../..';
-export declare type StateCache<State> = EvalStateResult<State>;
+import { GQLNodeInterface } from '../../../legacy/gqlResult';
 export declare function canBeCached(tx: GQLNodeInterface): boolean;
 //# sourceMappingURL=StateCache.d.ts.map

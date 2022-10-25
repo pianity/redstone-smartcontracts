@@ -1,14 +1,17 @@
-import { BlockHeightCacheResult, CurrentTx, ExecutionContext, GQLNodeInterface } from '../..';
+import { SortKeyCacheResult } from '../../cache/SortKeyCache';
+import { CurrentTx } from '../../contract/Contract';
+import { ExecutionContext } from '../../core/ExecutionContext';
+import { GQLNodeInterface } from '../../legacy/gqlResult';
 /**
  * Implementors of this class are responsible for evaluating contract's state
  * - based on the {@link ExecutionContext}.
  */
 export interface StateEvaluator {
-    eval<State>(executionContext: ExecutionContext<State>, currentTx: CurrentTx[]): Promise<EvalStateResult<State>>;
+    eval<State>(executionContext: ExecutionContext<State>, currentTx: CurrentTx[]): Promise<SortKeyCacheResult<EvalStateResult<State>>>;
     /**
      * a hook that is called on each state update (i.e. after evaluating state for each interaction transaction)
      */
-    onStateUpdate<State>(transaction: GQLNodeInterface, executionContext: ExecutionContext<State>, state: EvalStateResult<State>, nthInteraction?: number): Promise<void>;
+    onStateUpdate<State>(transaction: GQLNodeInterface, executionContext: ExecutionContext<State>, state: EvalStateResult<State>, force?: boolean): Promise<void>;
     /**
      * a hook that is called after state has been fully evaluated
      */
@@ -30,26 +33,25 @@ export interface StateEvaluator {
      */
     onContractCall<State>(transaction: GQLNodeInterface, executionContext: ExecutionContext<State>, state: EvalStateResult<State>): Promise<void>;
     /**
-     * loads latest available state for given contract for given blockHeight.
-     * - implementors should be aware that there might multiple interactions
-     * for single block - and sort them according to protocol specification.
+     * loads the latest available state for given contract for given sortKey.
      */
-    latestAvailableState<State>(contractTxId: string, blockHeight: number): Promise<BlockHeightCacheResult<EvalStateResult<State>> | null>;
-    /**
-     * allows to manually flush state cache into underneath storage.
-     */
-    flushCache(): Promise<void>;
+    latestAvailableState<State>(contractTxId: string, sortKey?: string): Promise<SortKeyCacheResult<EvalStateResult<State>> | null>;
+    putInCache<State>(contractTxId: string, transaction: GQLNodeInterface, state: EvalStateResult<State>): Promise<void>;
     /**
      * allows to syncState with an external state source (like Warp Distributed Execution Network)
      */
-    syncState(contractTxId: string, blockHeight: number, transactionId: string, state: any, validity: any): Promise<void>;
+    syncState(contractTxId: string, sortKey: string, state: any, validity: any): Promise<void>;
+    internalWriteState<State>(contractTxId: string, sortKey: string): Promise<SortKeyCacheResult<EvalStateResult<State>> | null>;
+    dumpCache(): Promise<any>;
+    hasContractCached(contractTxId: string): Promise<boolean>;
+    lastCachedSortKey(): Promise<string | null>;
+    allCachedContracts(): Promise<string[]>;
 }
 export declare class EvalStateResult<State> {
     readonly state: State;
     readonly validity: Record<string, boolean>;
-    readonly transactionId?: string;
-    readonly blockId?: string;
-    constructor(state: State, validity: Record<string, boolean>, transactionId?: string, blockId?: string);
+    readonly errorMessages: Record<string, string>;
+    constructor(state: State, validity: Record<string, boolean>, errorMessages: Record<string, string>);
 }
 export declare class DefaultEvaluationOptions implements EvaluationOptions {
     ignoreExceptions: boolean;
@@ -64,10 +66,12 @@ export declare class DefaultEvaluationOptions implements EvaluationOptions {
     bundlerUrl: string;
     gasLimit: number;
     useFastCopy: boolean;
-    manualCacheFlush: boolean;
     useVM2: boolean;
     allowUnsafeClient: boolean;
+    allowBigInt: boolean;
     walletBalanceUrl: string;
+    mineArLocalBlocks: boolean;
+    throwOnInternalWriteError: boolean;
 }
 export interface EvaluationOptions {
     ignoreExceptions: boolean;
@@ -82,9 +86,11 @@ export interface EvaluationOptions {
     bundlerUrl: string;
     gasLimit: number;
     useFastCopy: boolean;
-    manualCacheFlush: boolean;
     useVM2: boolean;
     allowUnsafeClient: boolean;
+    allowBigInt: boolean;
     walletBalanceUrl: string;
+    mineArLocalBlocks: boolean;
+    throwOnInternalWriteError: boolean;
 }
 //# sourceMappingURL=StateEvaluator.d.ts.map

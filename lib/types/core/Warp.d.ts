@@ -1,7 +1,17 @@
-import { DefinitionLoader, ExecutorFactory, HandlerApi, InteractionsLoader, InteractionsSorter, WarpBuilder, StateEvaluator } from './index';
 import Arweave from 'arweave';
-import { Contract, CreateContract, PstContract } from '../contract/index';
-import { GQLNodeInterface } from '../legacy/index';
+import { LevelDbCache } from '../cache/impl/LevelDbCache';
+import { Contract, InnerCallData } from '../contract/Contract';
+import { CreateContract } from '../contract/deploy/CreateContract';
+import { PstContract } from '../contract/PstContract';
+import { MigrationTool } from '../contract/migration/MigrationTool';
+import { Testing } from '../contract/testing/Testing';
+import { DefinitionLoader } from './modules/DefinitionLoader';
+import { ExecutorFactory } from './modules/ExecutorFactory';
+import { HandlerApi } from './modules/impl/HandlerExecutorFactory';
+import { InteractionsLoader } from './modules/InteractionsLoader';
+import { EvalStateResult, StateEvaluator } from './modules/StateEvaluator';
+import { WarpBuilder } from './WarpBuilder';
+export declare type WarpEnvironment = 'local' | 'testnet' | 'mainnet' | 'custom';
 /**
  * The Warp "motherboard" ;-).
  * This is the base class that supplies the implementation of the SmartWeave protocol
@@ -12,26 +22,27 @@ import { GQLNodeInterface } from '../legacy/index';
  */
 export declare class Warp {
     readonly arweave: Arweave;
+    readonly levelDb: LevelDbCache<EvalStateResult<unknown>>;
     readonly definitionLoader: DefinitionLoader;
     readonly interactionsLoader: InteractionsLoader;
-    readonly interactionsSorter: InteractionsSorter;
     readonly executorFactory: ExecutorFactory<HandlerApi<unknown>>;
     readonly stateEvaluator: StateEvaluator;
-    readonly useWarpGwInfo: boolean;
+    readonly environment: WarpEnvironment;
     readonly createContract: CreateContract;
-    constructor(arweave: Arweave, definitionLoader: DefinitionLoader, interactionsLoader: InteractionsLoader, interactionsSorter: InteractionsSorter, executorFactory: ExecutorFactory<HandlerApi<unknown>>, stateEvaluator: StateEvaluator, useWarpGwInfo?: boolean);
-    static builder(arweave: Arweave): WarpBuilder;
+    readonly migrationTool: MigrationTool;
+    readonly testing: Testing;
+    constructor(arweave: Arweave, levelDb: LevelDbCache<EvalStateResult<unknown>>, definitionLoader: DefinitionLoader, interactionsLoader: InteractionsLoader, executorFactory: ExecutorFactory<HandlerApi<unknown>>, stateEvaluator: StateEvaluator, environment?: WarpEnvironment);
+    static builder(arweave: Arweave, cache: LevelDbCache<EvalStateResult<unknown>>, environment: WarpEnvironment): WarpBuilder;
     /**
      * Allows to connect to any contract using its transaction id.
      * @param contractTxId
      * @param callingContract
      */
-    contract<State>(contractTxId: string, callingContract?: Contract, callingInteraction?: GQLNodeInterface): Contract<State>;
+    contract<State>(contractTxId: string, callingContract?: Contract, innerCallData?: InnerCallData): Contract<State>;
     /**
      * Allows to connect to a contract that conforms to the Profit Sharing Token standard
      * @param contractTxId
      */
     pst(contractTxId: string): PstContract;
-    flushCache(): Promise<void>;
 }
 //# sourceMappingURL=Warp.d.ts.map

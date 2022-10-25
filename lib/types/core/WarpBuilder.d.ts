@@ -1,27 +1,30 @@
 import Arweave from 'arweave';
-import { ConfirmationStatus, DefinitionLoader, ExecutorFactory, HandlerApi, InteractionsLoader, InteractionsSorter, Warp, SourceType, StateEvaluator } from '..';
-export declare const R_GW_URL = "https://d1o5nlqr4okus2.cloudfront.net";
+import { LevelDbCache } from '../cache/impl/LevelDbCache';
+import { DefinitionLoader } from './modules/DefinitionLoader';
+import { ExecutorFactory } from './modules/ExecutorFactory';
+import { HandlerApi } from './modules/impl/HandlerExecutorFactory';
+import { InteractionsLoader } from './modules/InteractionsLoader';
+import { StateEvaluator, EvalStateResult } from './modules/StateEvaluator';
+import { WarpEnvironment, Warp } from './Warp';
+import { CacheOptions, GatewayOptions } from './WarpFactory';
 export declare class WarpBuilder {
     private readonly _arweave;
+    private readonly _cache;
+    private readonly _environment;
     private _definitionLoader?;
     private _interactionsLoader?;
-    private _interactionsSorter?;
     private _executorFactory?;
     private _stateEvaluator?;
-    private _useWarpGwInfo;
-    constructor(_arweave: Arweave);
+    constructor(_arweave: Arweave, _cache: LevelDbCache<EvalStateResult<unknown>>, _environment?: WarpEnvironment);
     setDefinitionLoader(value: DefinitionLoader): WarpBuilder;
     setInteractionsLoader(value: InteractionsLoader): WarpBuilder;
-    setCacheableInteractionsLoader(value: InteractionsLoader, maxStoredInMemoryBlockHeights?: number): WarpBuilder;
-    setInteractionsSorter(value: InteractionsSorter): WarpBuilder;
     setExecutorFactory(value: ExecutorFactory<HandlerApi<unknown>>): WarpBuilder;
     setStateEvaluator(value: StateEvaluator): WarpBuilder;
     overwriteSource(sourceCode: {
         [key: string]: string;
     }): Warp;
-    useWarpGateway(confirmationStatus?: ConfirmationStatus, source?: SourceType, address?: string): WarpBuilder;
+    useWarpGateway(gatewayOptions: GatewayOptions, cacheOptions: CacheOptions): WarpBuilder;
     useArweaveGateway(): WarpBuilder;
-    useWarpGwInfo(): WarpBuilder;
     build(): Warp;
 }
 //# sourceMappingURL=WarpBuilder.d.ts.map

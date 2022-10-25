@@ -1,5 +1,6 @@
-import { ILoggerFactory, LoggerSettings, WarpLogger } from '../..';
-import { LogLevel } from '../LoggerSettings';
+import { LoggerSettings, LogLevel } from '../LoggerSettings';
+import { ILoggerFactory } from '../../logging/LoggerFactory';
+import { WarpLogger } from '../../logging/WarpLogger';
 export declare class ConsoleLoggerFactory implements ILoggerFactory {
     private registeredLoggers;
     private readonly registeredOptions;

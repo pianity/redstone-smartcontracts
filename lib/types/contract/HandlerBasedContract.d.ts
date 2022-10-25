@@ -1,5 +1,12 @@
-import { ArTransfer, ArWallet, BenchmarkStats, Contract, ContractCallStack, CurrentTx, EvalStateResult, EvaluationOptions, GQLNodeInterface, InteractionResult, SigningFunction, Warp, Tags, SourceData } from '..';
-import { NetworkInfoInterface } from 'arweave/node/network';
+import { SortKeyCacheResult } from '../cache/SortKeyCache';
+import { ContractCallRecord } from '../core/ContractCallRecord';
+import { InteractionResult } from '../core/modules/impl/HandlerExecutorFactory';
+import { EvaluationOptions, EvalStateResult } from '../core/modules/StateEvaluator';
+import { Warp } from '../core/Warp';
+import { GQLNodeInterface } from '../legacy/gqlResult';
+import { Contract, BenchmarkStats, SigningFunction, CurrentTx, WriteInteractionOptions, WriteInteractionResponse, InnerCallData } from './Contract';
+import { Tags, ArTransfer, ArWallet } from './deploy/CreateContract';
+import { SourceData } from './deploy/impl/SourceImpl';
 /**
  * An implementation of {@link Contract} that is backwards compatible with current style
  * of writing SW contracts (ie. using the "handle" function).
@@ -10,47 +17,36 @@ export declare class HandlerBasedContract<State> implements Contract<State> {
     private readonly _contractTxId;
     protected readonly warp: Warp;
     private readonly _parentContract;
-    private readonly _callingInteraction;
+    private readonly _innerCallData;
     private readonly logger;
     private _callStack;
     private _evaluationOptions;
-    /**
-     * current Arweave networkInfo that will be used for all operations of the SmartWeave protocol.
-     * Only the 'root' contract call should read this data from Arweave - all the inner calls ("child" contracts)
-     * should reuse this data from the parent ("calling") contract.
-     */
-    private _networkInfo?;
-    private _rootBlockHeight;
     private readonly _innerWritesEvaluator;
     private readonly _callDepth;
     private _benchmarkStats;
     private readonly _arweaveWrapper;
+    private _sorter;
+    private _rootSortKey;
     /**
      * wallet connected to this contract
      */
     protected signer?: SigningFunction;
-    constructor(_contractTxId: string, warp: Warp, _parentContract?: Contract, _callingInteraction?: GQLNodeInterface);
-    readState(blockHeight?: number, currentTx?: CurrentTx[]): Promise<EvalStateResult<State>>;
-    readStateSequencer(blockHeight: number, upToTransactionId: string, currentTx?: CurrentTx[]): Promise<EvalStateResult<State>>;
-    viewState<Input, View>(input: Input, blockHeight?: number, tags?: Tags, transfer?: ArTransfer): Promise<InteractionResult<State, View>>;
+    constructor(_contractTxId: string, warp: Warp, _parentContract?: Contract, _innerCallData?: InnerCallData);
+    readState(sortKeyOrBlockHeight?: string | number, currentTx?: CurrentTx[], interactions?: GQLNodeInterface[]): Promise<SortKeyCacheResult<EvalStateResult<State>>>;
+    viewState<Input, View>(input: Input, tags?: Tags, transfer?: ArTransfer): Promise<InteractionResult<State, View>>;
     viewStateForTx<Input, View>(input: Input, interactionTx: GQLNodeInterface): Promise<InteractionResult<State, View>>;
     dryWrite<Input>(input: Input, caller?: string, tags?: Tags, transfer?: ArTransfer): Promise<InteractionResult<State, unknown>>;
     dryWriteFromTx<Input>(input: Input, transaction: GQLNodeInterface, currentTx?: CurrentTx[]): Promise<InteractionResult<State, unknown>>;
-    writeInteraction<Input>(input: Input, tags?: Tags, transfer?: ArTransfer, strict?: boolean): Promise<string | null>;
-    bundleInteraction<Input>(input: Input, options?: {
-        tags: Tags;
-        strict: boolean;
-        vrf: boolean;
-    }): Promise<any | null>;
+    writeInteraction<Input>(input: Input, options?: WriteInteractionOptions): Promise<WriteInteractionResponse | null>;
+    private bundleInteraction;
     private createInteraction;
     txId(): string;
-    getCallStack(): ContractCallStack;
-    getNetworkInfo(): Partial<NetworkInfoInterface>;
+    getCallStack(): ContractCallRecord;
     connect(signer: ArWallet | SigningFunction): Contract<State>;
     setEvaluationOptions(options: Partial<EvaluationOptions>): Contract<State>;
-    getRootBlockHeight(): number;
     private waitForConfirmation;
     private createExecutionContext;
+    private getToSortKey;
     private createExecutionContextFromTx;
     private maybeResetRootContract;
     private callContract;
@@ -61,8 +57,9 @@ export declare class HandlerBasedContract<State> implements Contract<State> {
     evaluationOptions(): EvaluationOptions;
     lastReadStateStats(): BenchmarkStats;
     stateHash(state: State): string;
-    syncState(nodeAddress: string): Promise<Contract>;
-    evolve(newSrcTxId: string, useBundler?: boolean): Promise<string | null>;
+    syncState(externalUrl: string, params?: any): Promise<Contract>;
+    evolve(newSrcTxId: string, options?: WriteInteractionOptions): Promise<WriteInteractionResponse | null>;
     save(sourceData: SourceData): Promise<any>;
+    get rootSortKey(): string;
 }
 //# sourceMappingURL=HandlerBasedContract.d.ts.map

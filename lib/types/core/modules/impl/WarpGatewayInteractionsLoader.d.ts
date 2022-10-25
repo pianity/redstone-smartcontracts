@@ -1,23 +1,7 @@
-import { EvaluationOptions, GQLEdgeInterface, GQLNodeInterface, InteractionsLoader } from '../../..';
+import { GQLNodeInterface } from '../../../legacy/gqlResult';
 import 'redstone-isomorphic';
-interface Paging {
-    total: string;
-    limit: number;
-    items: number;
-    page: number;
-    pages: number;
-}
-interface Interaction {
-    status: string;
-    confirming_peers: string;
-    confirmations: string;
-    interaction: GQLNodeInterface;
-}
-export interface WarpGatewayInteractions {
-    paging: Paging;
-    interactions: Interaction[];
-    message?: string;
-}
+import { GW_TYPE, InteractionsLoader } from '../InteractionsLoader';
+import { EvaluationOptions } from '../StateEvaluator';
 export declare type ConfirmationStatus = {
     notCorrupted?: boolean;
     confirmed?: null;
@@ -44,11 +28,7 @@ export declare const enum SourceType {
  *
  * Passing no flag is the "backwards compatible" mode (ie. it will behave like the original Arweave GQL gateway endpoint).
  * Note that this may result in returning corrupted and/or forked interactions
- * - read more {@link https://github.com/redstone-finance/redstone-sw-gateway#corrupted-transactions}.
- *
- * Please note that currently caching (ie. {@link CacheableContractInteractionsLoader} is switched off
- * for WarpGatewayInteractionsLoader due to the issue mentioned in the
- * following comment {@link https://github.com/redstone-finance/warp/pull/62#issuecomment-995249264}
+ * - read more {@link https://github.com/warp-contracts/redstone-sw-gateway#corrupted-transactions}.
  */
 export declare class WarpGatewayInteractionsLoader implements InteractionsLoader {
     private readonly baseUrl;
@@ -56,7 +36,8 @@ export declare class WarpGatewayInteractionsLoader implements InteractionsLoader
     private readonly source;
     constructor(baseUrl: string, confirmationStatus?: ConfirmationStatus, source?: SourceType);
     private readonly logger;
-    load(contractId: string, fromBlockHeight: number, toBlockHeight: number, evaluationOptions?: EvaluationOptions, upToTransactionId?: string): Promise<GQLEdgeInterface[]>;
+    load(contractId: string, fromSortKey?: string, toSortKey?: string, evaluationOptions?: EvaluationOptions): Promise<GQLNodeInterface[]>;
+    type(): GW_TYPE;
+    clearCache(): void;
 }
-export {};
 //# sourceMappingURL=WarpGatewayInteractionsLoader.d.ts.map
