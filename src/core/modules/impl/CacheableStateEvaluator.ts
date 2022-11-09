@@ -24,16 +24,16 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
 
   constructor(
     arweave: Arweave,
-    private readonly cache: SortKeyCache<EvalStateResult<unknown>>,
+    private readonly cache: SortKeyCache<EvalStateResult<unknown, unknown>>,
     executionContextModifiers: ExecutionContextModifier[] = []
   ) {
     super(arweave, executionContextModifiers);
   }
 
-  async eval<State>(
-    executionContext: ExecutionContext<State, HandlerApi<State>>,
+  async eval<State, Err = unknown>(
+    executionContext: ExecutionContext<State, HandlerApi<State>, Err>,
     currentTx: CurrentTx[]
-  ): Promise<SortKeyCacheResult<EvalStateResult<State>>> {
+  ): Promise<SortKeyCacheResult<EvalStateResult<State, Err>>> {
     const cachedState = executionContext.cachedState;
     if (cachedState && cachedState.sortKey == executionContext.requestedSortKey) {
       this.cLogger.info(
@@ -76,11 +76,11 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
       } else {
         executionContext.handler?.initState(executionContext.contractDefinition.initState);
         this.cLogger.debug('Inserting initial state into cache');
-        const stateToCache = new EvalStateResult(executionContext.contractDefinition.initState, {}, {});
+        const stateToCache = new EvalStateResult<State, Err>(executionContext.contractDefinition.initState, {}, {});
         // no real sort-key - as we're returning the initial state
         await this.cache.put(new CacheKey(contractTxId, genesisSortKey), stateToCache);
 
-        return new SortKeyCacheResult<EvalStateResult<State>>(genesisSortKey, stateToCache);
+        return new SortKeyCacheResult<EvalStateResult<State, Err>>(genesisSortKey, stateToCache);
       }
     }
 
@@ -88,7 +88,7 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
       cachedState == null ? executionContext.contractDefinition.initState : cachedState.cachedValue.state;
 
     const baseValidity = cachedState == null ? {} : cachedState.cachedValue.validity;
-    const baseErrorMessages = cachedState == null ? {} : cachedState.cachedValue.errorMessages;
+    const baseErrorMessages = cachedState == null ? {} : cachedState.cachedValue.errors;
 
     this.cLogger.debug('Base state', baseState);
 
@@ -101,10 +101,10 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     );
   }
 
-  async onStateEvaluated<State>(
+  async onStateEvaluated<State, Err = unknown>(
     transaction: GQLNodeInterface,
     executionContext: ExecutionContext<State>,
-    state: EvalStateResult<State>
+    state: EvalStateResult<State, Err>
   ): Promise<void> {
     const contractTxId = executionContext.contractDefinition.txId;
     this.cLogger.debug(
@@ -118,10 +118,10 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     await this.putInCache(contractTxId, transaction, state);
   }
 
-  async onStateUpdate<State>(
+  async onStateUpdate<State, Err = unknown>(
     transaction: GQLNodeInterface,
     executionContext: ExecutionContext<State>,
-    state: EvalStateResult<State>,
+    state: EvalStateResult<State, Err>,
     force = false
   ): Promise<void> {
     if (executionContext.evaluationOptions.updateCacheForEachInteraction || force) {
@@ -137,28 +137,28 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     }
   }
 
-  async latestAvailableState<State>(
+  async latestAvailableState<State, Err = unknown>(
     contractTxId: string,
     sortKey?: string
-  ): Promise<SortKeyCacheResult<EvalStateResult<State>> | null> {
+  ): Promise<SortKeyCacheResult<EvalStateResult<State, Err>> | null> {
     this.cLogger.debug('Searching for', { contractTxId, sortKey });
     if (sortKey) {
       const stateCache = (await this.cache.getLessOrEqual(contractTxId, sortKey)) as SortKeyCacheResult<
-        EvalStateResult<State>
+        EvalStateResult<State, Err>
       >;
       if (stateCache) {
         this.cLogger.debug(`Latest available state at ${contractTxId}: ${stateCache.sortKey}`);
       }
       return stateCache;
     } else {
-      return (await this.cache.getLast(contractTxId)) as SortKeyCacheResult<EvalStateResult<State>>;
+      return (await this.cache.getLast(contractTxId)) as SortKeyCacheResult<EvalStateResult<State, Err>>;
     }
   }
 
-  async onInternalWriteStateUpdate<State>(
+  async onInternalWriteStateUpdate<State, Err = unknown>(
     transaction: GQLNodeInterface,
     contractTxId: string,
-    state: EvalStateResult<State>
+    state: EvalStateResult<State, Err>
   ): Promise<void> {
     this.cLogger.debug('Internal write state update:', {
       sortKey: transaction.sortKey,
@@ -169,10 +169,10 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     await this.putInCache(contractTxId, transaction, state);
   }
 
-  async onContractCall<State>(
+  async onContractCall<State, Err = unknown>(
     transaction: GQLNodeInterface,
     executionContext: ExecutionContext<State>,
-    state: EvalStateResult<State>
+    state: EvalStateResult<State, Err>
   ): Promise<void> {
     if (executionContext.sortedInteractions?.length == 0) {
       return;
@@ -188,10 +188,10 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     );
   }
 
-  public async putInCache<State>(
+  public async putInCache<State, Err = unknown>(
     contractTxId: string,
     transaction: GQLNodeInterface,
-    state: EvalStateResult<State>
+    state: EvalStateResult<State, Err>
   ): Promise<void> {
     if (transaction.dry) {
       return;
@@ -199,7 +199,7 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     if (transaction.confirmationStatus !== undefined && transaction.confirmationStatus !== 'confirmed') {
       return;
     }
-    const stateToCache = new EvalStateResult(state.state, state.validity, state.errorMessages || {});
+    const stateToCache = new EvalStateResult(state.state, state.validity, state.errors || {});
 
     this.cLogger.debug('Putting into cache', {
       contractTxId,
@@ -222,11 +222,11 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     return await this.cache.dump();
   }
 
-  async internalWriteState<State>(
+  async internalWriteState<State, Err = unknown>(
     contractTxId: string,
     sortKey: string
-  ): Promise<SortKeyCacheResult<EvalStateResult<State>> | null> {
-    return (await this.cache.get(contractTxId, sortKey)) as SortKeyCacheResult<EvalStateResult<State>>;
+  ): Promise<SortKeyCacheResult<EvalStateResult<State, Err>> | null> {
+    return (await this.cache.get(contractTxId, sortKey)) as SortKeyCacheResult<EvalStateResult<State, Err>>;
   }
 
   async hasContractCached(contractTxId: string): Promise<boolean> {

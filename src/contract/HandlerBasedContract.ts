@@ -9,7 +9,8 @@ import {
   InteractionResult,
   HandlerApi,
   ContractInteraction,
-  InteractionData
+  InteractionData,
+  InteractionResultType
 } from '../core/modules/impl/HandlerExecutorFactory';
 import { LexicographicalInteractionsSorter } from '../core/modules/impl/LexicographicalInteractionsSorter';
 import { InteractionsSorter } from '../core/modules/InteractionsSorter';
@@ -30,12 +31,17 @@ import {
   CurrentTx,
   WriteInteractionOptions,
   WriteInteractionResponse,
-  InnerCallData
+  InnerCallData,
+  ContractError
 } from './Contract';
 import { Tags, ArTransfer, emptyTransfer, ArWallet } from './deploy/CreateContract';
 import { SourceData, SourceImpl } from './deploy/impl/SourceImpl';
 import { InnerWritesEvaluator } from './InnerWritesEvaluator';
 import { generateMockVrf } from '../utils/vrf';
+
+type CreateInteractionResult<Strict extends boolean, Err> = Strict extends false
+  ? { type: 'ok'; interactionTx: Transaction }
+  : { type: 'ok' | 'error' | 'exception'; error?: Err; interactionTx?: Transaction };
 
 /**
  * An implementation of {@link Contract} that is backwards compatible with current style
@@ -43,7 +49,7 @@ import { generateMockVrf } from '../utils/vrf';
  *
  * It requires {@link ExecutorFactory} that is using {@link HandlerApi} generic type.
  */
-export class HandlerBasedContract<State> implements Contract<State> {
+export class HandlerBasedContract<State, Err = unknown> implements Contract<State, Err> {
   private readonly logger = LoggerFactory.INST.create('HandlerBasedContract');
 
   private _callStack: ContractCallRecord;
@@ -118,7 +124,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     sortKeyOrBlockHeight?: string | number,
     currentTx?: CurrentTx[],
     interactions?: GQLNodeInterface[]
-  ): Promise<SortKeyCacheResult<EvalStateResult<State>>> {
+  ): Promise<SortKeyCacheResult<EvalStateResult<State, Err>>> {
     this.logger.info('Read state for', {
       contractTxId: this._contractTxId,
       currentTx,
@@ -170,7 +176,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     input: Input,
     tags: Tags = [],
     transfer: ArTransfer = emptyTransfer
-  ): Promise<InteractionResult<State, View>> {
+  ): Promise<InteractionResult<State, View, Err>> {
     this.logger.info('View state for', this._contractTxId);
     return await this.callContract<Input, View>(input, undefined, undefined, tags, transfer);
   }
@@ -178,7 +184,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
   async viewStateForTx<Input, View>(
     input: Input,
     interactionTx: GQLNodeInterface
-  ): Promise<InteractionResult<State, View>> {
+  ): Promise<InteractionResult<State, View, Err>> {
     this.logger.info(`View state for ${this._contractTxId}`, interactionTx);
     return await this.callContractForTx<Input, View>(input, interactionTx);
   }
@@ -188,24 +194,24 @@ export class HandlerBasedContract<State> implements Contract<State> {
     caller?: string,
     tags?: Tags,
     transfer?: ArTransfer
-  ): Promise<InteractionResult<State, unknown>> {
+  ): Promise<InteractionResult<State, unknown, Err>> {
     this.logger.info('Dry-write for', this._contractTxId);
-    return await this.callContract<Input>(input, caller, undefined, tags, transfer);
+    return await this.callContract<Input, unknown>(input, caller, undefined, tags, transfer);
   }
 
   async dryWriteFromTx<Input>(
     input: Input,
     transaction: GQLNodeInterface,
     currentTx?: CurrentTx[]
-  ): Promise<InteractionResult<State, unknown>> {
+  ): Promise<InteractionResult<State, unknown, Err>> {
     this.logger.info(`Dry-write from transaction ${transaction.id} for ${this._contractTxId}`);
-    return await this.callContractForTx<Input>(input, transaction, currentTx || []);
+    return await this.callContractForTx<Input, unknown>(input, transaction, currentTx || []);
   }
 
   async writeInteraction<Input>(
     input: Input,
     options?: WriteInteractionOptions
-  ): Promise<WriteInteractionResponse | null> {
+  ): Promise<WriteInteractionResponse<Err> | null> {
     this.logger.info('Write interaction', { input, options });
     if (!this.signer) {
       throw new Error("Wallet not connected. Use 'connect' method first.");
@@ -234,13 +240,13 @@ export class HandlerBasedContract<State> implements Contract<State> {
     }
 
     if (bundleInteraction) {
-      return await this.bundleInteraction(input, {
+      return await this.bundleInteraction<Input>(input, {
         tags: effectiveTags,
         strict: effectiveStrict,
         vrf: effectiveVrf
       });
     } else {
-      const interactionTx = await this.createInteraction(
+      const interaction = await this.createInteraction<Input, boolean>(
         input,
         effectiveTags,
         effectiveTransfer,
@@ -249,25 +255,29 @@ export class HandlerBasedContract<State> implements Contract<State> {
         effectiveVrf && environment !== 'mainnet',
         effectiveReward
       );
-      const response = await arweave.transactions.post(interactionTx);
 
-      if (response.status !== 200) {
-        this.logger.error('Error while posting transaction', response);
-        return null;
+      if (interaction.type === 'ok') {
+        const response = await arweave.transactions.post(interaction.interactionTx);
+
+        if (response.status !== 200) {
+          this.logger.error('Error while posting transaction', response);
+          return null;
+        }
+
+        if (this._evaluationOptions.waitForConfirmation) {
+          this.logger.info('Waiting for confirmation of', interaction.interactionTx.id);
+          const benchmark = Benchmark.measure();
+          await this.waitForConfirmation(interaction.interactionTx.id);
+          this.logger.info('Transaction confirmed after', benchmark.elapsed());
+        }
+
+        if (this.warp.environment == 'local' && this._evaluationOptions.mineArLocalBlocks) {
+          await this.warp.testing.mineBlock();
+        }
+        return { type: 'ok', originalTxId: interaction.interactionTx.id };
+      } else {
+        return { type: interaction.type, error: interaction.error };
       }
-
-      if (this._evaluationOptions.waitForConfirmation) {
-        this.logger.info('Waiting for confirmation of', interactionTx.id);
-        const benchmark = Benchmark.measure();
-        await this.waitForConfirmation(interactionTx.id);
-        this.logger.info('Transaction confirmed after', benchmark.elapsed());
-      }
-
-      if (this.warp.environment == 'local' && this._evaluationOptions.mineArLocalBlocks) {
-        await this.warp.testing.mineBlock();
-      }
-
-      return { originalTxId: interactionTx.id };
     }
   }
 
@@ -278,10 +288,10 @@ export class HandlerBasedContract<State> implements Contract<State> {
       strict: boolean;
       vrf: boolean;
     }
-  ): Promise<WriteInteractionResponse | null> {
+  ): Promise<WriteInteractionResponse<Err> | null> {
     this.logger.info('Bundle interaction input', input);
 
-    const interactionTx = await this.createInteraction(
+    const interaction = await this.createInteraction<Input, boolean>(
       input,
       options.tags,
       emptyTransfer,
@@ -290,42 +300,49 @@ export class HandlerBasedContract<State> implements Contract<State> {
       options.vrf
     );
 
-    const response = await fetch(`${this._evaluationOptions.bundlerUrl}gateway/sequencer/register`, {
-      method: 'POST',
-      body: JSON.stringify(interactionTx),
-      headers: {
-        'Accept-Encoding': 'gzip, deflate, br',
-        'Content-Type': 'application/json',
-        Accept: 'application/json'
-      }
-    })
-      .then((res) => {
-        this.logger.debug(res);
-        return res.ok ? res.json() : Promise.reject(res);
-      })
-      .catch((error) => {
-        this.logger.error(error);
-        if (error.body?.message) {
-          this.logger.error(error.body.message);
+    if (interaction.type === 'ok') {
+      const response = await fetch(`${this._evaluationOptions.bundlerUrl}gateway/sequencer/register`, {
+        method: 'POST',
+        body: JSON.stringify(interaction.interactionTx),
+        headers: {
+          'Accept-Encoding': 'gzip, deflate, br',
+          'Content-Type': 'application/json',
+          Accept: 'application/json'
         }
-        throw new Error(`Unable to bundle interaction: ${JSON.stringify(error)}`);
-      });
+      })
+        .then((res) => {
+          this.logger.debug(res);
+          return res.ok ? res.json() : Promise.reject(res);
+        })
+        .catch((error) => {
+          this.logger.error(error);
+          if (error.body?.message) {
+            this.logger.error(error.body.message);
+          }
+          throw new Error(`Unable to bundle interaction: ${JSON.stringify(error)}`);
+        });
 
-    return {
-      bundlrResponse: response,
-      originalTxId: interactionTx.id
-    };
+      return {
+        type: 'ok',
+        bundlrResponse: response,
+        originalTxId: interaction.interactionTx.id
+      };
+    } else {
+      return { type: interaction.type, error: interaction.error };
+    }
   }
 
-  private async createInteraction<Input>(
+  private async createInteraction<Input, Strict extends boolean>(
     input: Input,
     tags: Tags,
     transfer: ArTransfer,
-    strict: boolean,
+    strict: Strict,
     bundle = false,
     vrf = false,
     reward?: string
-  ) {
+  ): Promise<CreateInteractionResult<Strict, Err>> {
+    let handlerResult: InteractionResult<State, unknown, Err> | undefined;
+
     if (this._evaluationOptions.internalWrites) {
       // Call contract and verify if there are any internal writes:
       // 1. Evaluate current contract state
@@ -333,10 +350,18 @@ export class HandlerBasedContract<State> implements Contract<State> {
       // 3. Verify the callStack and search for any "internalWrites" transactions
       // 4. For each found "internalWrite" transaction - generate additional tag:
       // {name: 'InternalWrite', value: callingContractTxId}
-      const handlerResult = await this.callContract(input, undefined, undefined, tags, transfer, strict, vrf);
+      const innerHandlerResult = await this.callContract<Input, Err>(
+        input,
+        undefined,
+        undefined,
+        tags,
+        transfer,
+        strict,
+        vrf
+      );
 
-      if (strict && handlerResult.type !== 'ok') {
-        throw Error(`Cannot create interaction: ${handlerResult.errorMessage}`);
+      if (strict) {
+        handlerResult = innerHandlerResult;
       }
       const callStack: ContractCallRecord = this.getCallStack();
       const innerWrites = this._innerWritesEvaluator.eval(callStack);
@@ -353,32 +378,53 @@ export class HandlerBasedContract<State> implements Contract<State> {
       this.logger.debug('Tags with inner calls', tags);
     } else {
       if (strict) {
-        const handlerResult = await this.callContract(input, undefined, undefined, tags, transfer, strict, vrf);
+        handlerResult = await this.callContract<Input, Err>(input, undefined, undefined, tags, transfer, strict, vrf);
         if (handlerResult.type !== 'ok') {
-          throw Error(`Cannot create interaction: ${handlerResult.errorMessage}`);
+          throw new ContractError<Err>(handlerResult.error);
         }
       }
     }
 
-    if (vrf) {
-      tags.push({
-        name: SmartWeaveTags.REQUEST_VRF,
-        value: 'true'
-      });
+    let interactionTx: Transaction | undefined;
+
+    if (!(strict && handlerResult?.type !== 'ok')) {
+      if (vrf) {
+        tags.push({
+          name: SmartWeaveTags.REQUEST_VRF,
+          value: 'true'
+        });
+      }
+
+      interactionTx = await createInteractionTx(
+        this.warp.arweave,
+        this.signer,
+        this._contractTxId,
+        input,
+        tags,
+        transfer.target,
+        transfer.winstonQty,
+        bundle,
+        reward
+      );
     }
 
-    const interactionTx = await createInteractionTx(
-      this.warp.arweave,
-      this.signer,
-      this._contractTxId,
-      input,
-      tags,
-      transfer.target,
-      transfer.winstonQty,
-      bundle,
-      reward
-    );
-    return interactionTx;
+    if (strict) {
+      const resultStrict: CreateInteractionResult<true, Err> = {
+        type: handlerResult?.type ?? 'ok',
+        interactionTx
+      };
+
+      if (handlerResult?.type === 'error' && handlerResult?.error) {
+        resultStrict.error = handlerResult.error;
+      }
+
+      return resultStrict as CreateInteractionResult<Strict, Err>;
+    } else {
+      return {
+        type: 'ok',
+        interactionTx
+      };
+    }
   }
 
   txId(): string {
@@ -389,7 +435,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     return this._callStack;
   }
 
-  connect(signer: ArWallet | SigningFunction): Contract<State> {
+  connect(signer: ArWallet | SigningFunction): Contract<State, Err> {
     if (typeof signer == 'function') {
       this.signer = signer;
     } else {
@@ -400,7 +446,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     return this;
   }
 
-  setEvaluationOptions(options: Partial<EvaluationOptions>): Contract<State> {
+  setEvaluationOptions(options: Partial<EvaluationOptions>): Contract<State, Err> {
     this._evaluationOptions = {
       ...this._evaluationOptions,
       ...options
@@ -428,11 +474,11 @@ export class HandlerBasedContract<State> implements Contract<State> {
     upToSortKey?: string,
     forceDefinitionLoad = false,
     interactions?: GQLNodeInterface[]
-  ): Promise<ExecutionContext<State, HandlerApi<State>>> {
+  ): Promise<ExecutionContext<State, HandlerApi<State>, Err>> {
     const { definitionLoader, interactionsLoader, executorFactory, stateEvaluator } = this.warp;
 
     const benchmark = Benchmark.measure();
-    const cachedState = await stateEvaluator.latestAvailableState<State>(contractTxId, upToSortKey);
+    const cachedState = await stateEvaluator.latestAvailableState<State, Err>(contractTxId, upToSortKey);
 
     this.logger.debug('cache lookup', benchmark.elapsed());
     benchmark.reset();
@@ -507,7 +553,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
   private async createExecutionContextFromTx(
     contractTxId: string,
     transaction: GQLNodeInterface
-  ): Promise<ExecutionContext<State, HandlerApi<State>>> {
+  ): Promise<ExecutionContext<State, HandlerApi<State>, Err>> {
     const caller = transaction.owner.address;
     const sortKey = transaction.sortKey;
 
@@ -536,7 +582,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     transfer: ArTransfer = emptyTransfer,
     strict = false,
     vrf = false
-  ): Promise<InteractionResult<State, View>> {
+  ): Promise<InteractionResult<State, View, Err>> {
     this.logger.info('Call contract input', input);
     this.maybeResetRootContract();
     if (!this.signer) {
@@ -574,7 +620,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     };
 
     // eval current state
-    const evalStateResult = await stateEvaluator.eval<State>(executionContext, []);
+    const evalStateResult = await stateEvaluator.eval<State, Err>(executionContext, []);
     this.logger.info('Current state', evalStateResult.cachedValue.state);
 
     // create interaction transaction
@@ -621,7 +667,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     if (handleResult.type !== 'ok') {
       this.logger.fatal('Error while interacting with contract', {
         type: handleResult.type,
-        error: handleResult.errorMessage
+        error: handleResult.error
       });
     }
 
@@ -632,11 +678,11 @@ export class HandlerBasedContract<State> implements Contract<State> {
     input: Input,
     interactionTx: GQLNodeInterface,
     currentTx?: CurrentTx[]
-  ): Promise<InteractionResult<State, View>> {
+  ): Promise<InteractionResult<State, View, Err>> {
     this.maybeResetRootContract();
 
     const executionContext = await this.createExecutionContextFromTx(this._contractTxId, interactionTx);
-    const evalStateResult = await this.warp.stateEvaluator.eval<State>(executionContext, currentTx);
+    const evalStateResult = await this.warp.stateEvaluator.eval<State, Err>(executionContext, currentTx);
 
     this.logger.debug('callContractForTx - evalStateResult', {
       result: evalStateResult.cachedValue.state,
@@ -660,7 +706,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       evalStateResult.cachedValue
     );
     result.originalValidity = evalStateResult.cachedValue.validity;
-    result.originalErrorMessages = evalStateResult.cachedValue.errorMessages;
+    result.originalErrors = evalStateResult.cachedValue.errors;
 
     return result;
   }
@@ -668,11 +714,11 @@ export class HandlerBasedContract<State> implements Contract<State> {
   private async evalInteraction<Input, View = unknown>(
     interactionData: InteractionData<Input>,
     executionContext: ExecutionContext<State, HandlerApi<State>>,
-    evalStateResult: EvalStateResult<State>
+    evalStateResult: EvalStateResult<State, Err>
   ) {
     const interactionCall: InteractionCall = this.getCallStack().addInteractionData(interactionData);
     const benchmark = Benchmark.measure();
-    const result = await executionContext.handler.handle<Input, View>(
+    const result = await executionContext.handler.handle<Input, View, Err>(
       executionContext,
       evalStateResult,
       interactionData
@@ -683,6 +729,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       outputState: this._evaluationOptions.stackTrace.saveState ? result.state : undefined,
       executionTime: benchmark.elapsed(true) as number,
       valid: result.type === 'ok',
+      error: result.error,
       errorMessage: result.errorMessage,
       gasUsed: result.gasUsed
     });
@@ -741,7 +788,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     return this;
   }
 
-  async evolve(newSrcTxId: string, options?: WriteInteractionOptions): Promise<WriteInteractionResponse | null> {
+  async evolve(newSrcTxId: string, options?: WriteInteractionOptions): Promise<WriteInteractionResponse<Err> | null> {
     return await this.writeInteraction<any>({ function: 'evolve', value: newSrcTxId }, options);
   }
 

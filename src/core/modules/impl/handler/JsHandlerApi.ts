@@ -16,11 +16,11 @@ export class JsHandlerApi<State> extends AbstractContractHandler<State> {
     super(swGlobal, contractDefinition);
   }
 
-  async handle<Input, Result>(
+  async handle<Input, Result, Err>(
     executionContext: ExecutionContext<State>,
-    currentResult: EvalStateResult<State>,
+    currentResult: EvalStateResult<State, Err>,
     interactionData: InteractionData<Input>
-  ): Promise<InteractionResult<State, Result>> {
+  ): Promise<InteractionResult<State, Result, Err>> {
     const { timeoutId, timeoutPromise } = timeout(
       executionContext.evaluationOptions.maxInteractionEvaluationTimeSeconds
     );
@@ -31,7 +31,7 @@ export class JsHandlerApi<State> extends AbstractContractHandler<State> {
       const stateCopy = deepCopy(currentResult.state, executionContext.evaluationOptions.useFastCopy);
       this.swGlobal._activeTx = interactionTx;
       this.swGlobal.caller = interaction.caller; // either contract tx id (for internal writes) or transaction.owner
-      this.assignReadContractState<Input>(executionContext, currentTx, currentResult, interactionTx);
+      this.assignReadContractState<Input, Err>(executionContext, currentTx, currentResult, interactionTx);
       this.assignViewContractState<Input>(executionContext);
       this.assignWrite(executionContext, currentTx);
       this.assignRefreshState(executionContext);

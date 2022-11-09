@@ -222,11 +222,11 @@ export interface InteractionData<Input> {
  * A handle that effectively runs contract's code.
  */
 export interface HandlerApi<State> {
-  handle<Input, Result>(
+  handle<Input, Result, Err>(
     executionContext: ExecutionContext<State>,
-    currentResult: EvalStateResult<State>,
+    currentResult: EvalStateResult<State, Err>,
     interactionData: InteractionData<Input>
-  ): Promise<InteractionResult<State, Result>>;
+  ): Promise<InteractionResult<State, Result, Err>>;
 
   initState(state: State): void;
 }
@@ -243,11 +243,12 @@ export type HandlerResult<State, Result> = {
   gasUsed?: number;
 };
 
-export type InteractionResult<State, Result> = HandlerResult<State, Result> & {
+export type InteractionResult<State, Result, Err> = HandlerResult<State, Result> & {
   type: InteractionResultType;
+  error?: Err;
   errorMessage?: string;
   originalValidity?: Record<string, boolean>;
-  originalErrorMessages?: Record<string, string>;
+  originalErrors?: Record<string, Err>;
 };
 
 export type ContractInteraction<Input> = {

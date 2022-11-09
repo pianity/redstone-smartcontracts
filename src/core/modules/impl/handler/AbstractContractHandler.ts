@@ -21,11 +21,11 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
     this.assignRefreshState = this.assignRefreshState.bind(this);
   }
 
-  abstract handle<Input, Result>(
+  abstract handle<Input, Result, Err>(
     executionContext: ExecutionContext<State>,
-    currentResult: EvalStateResult<State>,
+    currentResult: EvalStateResult<State, Err>,
     interactionData: InteractionData<Input>
-  ): Promise<InteractionResult<State, Result>>;
+  ): Promise<InteractionResult<State, Result, Err>>;
 
   abstract initState(state: State): void;
 
@@ -38,7 +38,7 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
       contractTxId: string,
       input: Input,
       throwOnError?: boolean
-    ): Promise<InteractionResult<unknown, unknown>> => {
+    ): Promise<InteractionResult<unknown, unknown, unknown>> => {
       if (!executionContext.evaluationOptions.internalWrites) {
         throw new Error("Internal writes feature switched off. Change EvaluationOptions.internalWrites flag to 'true'");
       }
@@ -73,9 +73,10 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
         result.type !== 'ok' &&
         effectiveThrowOnError &&
         (!this.swGlobal._activeTx.dry || (this.swGlobal._activeTx.dry && this.swGlobal._activeTx.strict));
-      const effectiveErrorMessage = shouldAutoThrow
-        ? `Internal write auto error for call [${JSON.stringify(debugData)}]: ${result.errorMessage}`
-        : result.errorMessage;
+
+      // const effectiveErrorMessage = shouldAutoThrow
+      //   ? `Internal write auto error for call [${JSON.stringify(debugData)}]: ${result.errorMessage}`
+      //   : result.errorMessage;
 
       await executionContext.warp.stateEvaluator.onInternalWriteStateUpdate(this.swGlobal._activeTx, contractTxId, {
         state: result.state as State,
@@ -83,13 +84,13 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
           ...result.originalValidity,
           [this.swGlobal._activeTx.id]: result.type == 'ok'
         },
-        errorMessages: {
-          ...result.originalErrorMessages,
-          [this.swGlobal._activeTx.id]: effectiveErrorMessage
+        errors: {
+          ...result.originalErrors,
+          [this.swGlobal._activeTx.id]: result.error
         }
       });
       if (shouldAutoThrow) {
-        throw new ContractError(effectiveErrorMessage);
+        throw new ContractError(result.error);
       }
 
       return result;
@@ -112,10 +113,10 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
     };
   }
 
-  protected assignReadContractState<Input>(
+  protected assignReadContractState<Input, Err>(
     executionContext: ExecutionContext<State>,
     currentTx: CurrentTx[],
-    currentResult: EvalStateResult<State>,
+    currentResult: EvalStateResult<State, Err>,
     interactionTx: GQLNodeInterface
   ) {
     this.swGlobal.contracts.readContractState = async (contractTxId: string, returnValidity?: boolean) => {

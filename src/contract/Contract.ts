@@ -12,9 +12,9 @@ export type BenchmarkStats = { gatewayCommunication: number; stateEvaluation: nu
 
 export type SigningFunction = (tx: Transaction) => Promise<void>;
 
-export class ContractError extends Error {
-  constructor(message) {
-    super(message);
+export class ContractError<T> extends Error {
+  constructor(public error: T) {
+    super('ContractError');
     this.name = 'ContractError';
   }
 }
@@ -26,10 +26,18 @@ interface BundlrResponse {
   block: number;
 }
 
-export interface WriteInteractionResponse {
+export interface WriteInteractionResponseSuccess {
+  type: 'ok';
   bundlrResponse?: BundlrResponse;
   originalTxId: string;
 }
+
+export interface WriteInteractionResponseFailure<Err> {
+  type: 'error' | 'exception';
+  error: Err;
+}
+
+export type WriteInteractionResponse<Err> = WriteInteractionResponseSuccess | WriteInteractionResponseFailure<Err>;
 
 export type WarpOptions = {
   vrf?: boolean;
@@ -71,7 +79,7 @@ export type InnerCallData = { callingInteraction: GQLNodeInterface; callType: In
  * A base interface to be implemented by SmartWeave Contracts clients
  * - contains "low-level" methods that allow to interact with any contract
  */
-export interface Contract<State = unknown> extends Source {
+export interface Contract<State = unknown, Err = unknown> extends Source {
   /**
    * Returns the Arweave transaction id of this contract.
    */
@@ -85,14 +93,14 @@ export interface Contract<State = unknown> extends Source {
    *
    * @param signer - either {@link ArWallet} that will be connected to this contract or custom {@link SigningFunction}
    */
-  connect(signer: ArWallet | SigningFunction): Contract<State>;
+  connect(signer: ArWallet | SigningFunction): Contract<State, Err>;
 
   /**
    * Allows to set ({@link EvaluationOptions})
    *
    * @param options - a set of {@link EvaluationOptions} that will overwrite current configuration
    */
-  setEvaluationOptions(options: Partial<EvaluationOptions>): Contract<State>;
+  setEvaluationOptions(options: Partial<EvaluationOptions>): Contract<State, Err>;
 
   /**
    * Returns state of the contract at required sortKey or blockHeight.
@@ -107,7 +115,7 @@ export interface Contract<State = unknown> extends Source {
     sortKeyOrBlockHeight?: string | number,
     currentTx?: CurrentTx[],
     interactions?: GQLNodeInterface[]
-  ): Promise<SortKeyCacheResult<EvalStateResult<State>>>;
+  ): Promise<SortKeyCacheResult<EvalStateResult<State, Err>>>;
 
   /**
    * Returns the "view" of the state, computed by the SWC -
@@ -128,7 +136,7 @@ export interface Contract<State = unknown> extends Source {
     input: Input,
     tags?: Tags,
     transfer?: ArTransfer
-  ): Promise<InteractionResult<State, View>>;
+  ): Promise<InteractionResult<State, View, Err>>;
 
   /**
    * A version of the viewState method to be used from within the contract's source code.
@@ -145,7 +153,7 @@ export interface Contract<State = unknown> extends Source {
   viewStateForTx<Input = unknown, View = unknown>(
     input: Input,
     transaction: GQLNodeInterface
-  ): Promise<InteractionResult<State, View>>;
+  ): Promise<InteractionResult<State, View, Err>>;
 
   /**
    * A dry-write operation on contract. It first loads the contract's state and then
@@ -162,13 +170,13 @@ export interface Contract<State = unknown> extends Source {
     caller?: string,
     tags?: Tags,
     transfer?: ArTransfer
-  ): Promise<InteractionResult<State, unknown>>;
+  ): Promise<InteractionResult<State, unknown, Err>>;
 
   dryWriteFromTx<Input>(
     input: Input,
     transaction: GQLNodeInterface,
     currentTx?: CurrentTx[]
-  ): Promise<InteractionResult<State, unknown>>;
+  ): Promise<InteractionResult<State, unknown, Err>>;
 
   /**
    * Writes a new "interaction" transaction - i.e. such transaction that stores input for the contract.
@@ -176,7 +184,7 @@ export interface Contract<State = unknown> extends Source {
   writeInteraction<Input = unknown>(
     input: Input,
     options?: WriteInteractionOptions
-  ): Promise<WriteInteractionResponse | null>;
+  ): Promise<WriteInteractionResponse<Err> | null>;
 
   /**
    * Returns the full call tree report the last
@@ -232,7 +240,7 @@ export interface Contract<State = unknown> extends Source {
    * and its transaction to be confirmed by the network.
    * @param newSrcTxId - result of the {@link save} method call.
    */
-  evolve(newSrcTxId: string, options?: WriteInteractionOptions): Promise<WriteInteractionResponse | null>;
+  evolve(newSrcTxId: string, options?: WriteInteractionOptions): Promise<WriteInteractionResponse<Err> | null>;
 
   rootSortKey: string;
 }

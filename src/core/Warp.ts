@@ -33,7 +33,7 @@ export class Warp {
 
   constructor(
     readonly arweave: Arweave,
-    readonly levelDb: LevelDbCache<EvalStateResult<unknown>>,
+    readonly levelDb: LevelDbCache<EvalStateResult<unknown, unknown>>,
     readonly definitionLoader: DefinitionLoader,
     readonly interactionsLoader: InteractionsLoader,
     readonly executorFactory: ExecutorFactory<HandlerApi<unknown>>,
@@ -47,7 +47,7 @@ export class Warp {
 
   static builder(
     arweave: Arweave,
-    cache: LevelDbCache<EvalStateResult<unknown>>,
+    cache: LevelDbCache<EvalStateResult<unknown, unknown>>,
     environment: WarpEnvironment
   ): WarpBuilder {
     return new WarpBuilder(arweave, cache, environment);

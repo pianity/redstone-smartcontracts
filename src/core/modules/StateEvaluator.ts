@@ -8,37 +8,37 @@ import { GQLNodeInterface } from '../../legacy/gqlResult';
  * - based on the {@link ExecutionContext}.
  */
 export interface StateEvaluator {
-  eval<State>(
-    executionContext: ExecutionContext<State>,
+  eval<State, Err>(
+    executionContext: ExecutionContext<State, unknown, Err>,
     currentTx: CurrentTx[]
-  ): Promise<SortKeyCacheResult<EvalStateResult<State>>>;
+  ): Promise<SortKeyCacheResult<EvalStateResult<State, Err>>>;
 
   /**
    * a hook that is called on each state update (i.e. after evaluating state for each interaction transaction)
    */
-  onStateUpdate<State>(
+  onStateUpdate<State, Err>(
     transaction: GQLNodeInterface,
     executionContext: ExecutionContext<State>,
-    state: EvalStateResult<State>,
+    state: EvalStateResult<State, Err>,
     force?: boolean
   ): Promise<void>;
 
   /**
    * a hook that is called after state has been fully evaluated
    */
-  onStateEvaluated<State>(
+  onStateEvaluated<State, Err>(
     transaction: GQLNodeInterface,
     executionContext: ExecutionContext<State>,
-    state: EvalStateResult<State>
+    state: EvalStateResult<State, Err>
   ): Promise<void>;
 
   /**
    * a hook that is called after performing internal write between contracts
    */
-  onInternalWriteStateUpdate<State>(
+  onInternalWriteStateUpdate<State, Err>(
     transaction: GQLNodeInterface,
     contractTxId: string,
-    state: EvalStateResult<State>
+    state: EvalStateResult<State, Err>
   ): Promise<void>;
 
   /**
@@ -52,31 +52,35 @@ export interface StateEvaluator {
    * we would retrieve state cached for 722317. If there are any transactions
    * between 722317 and 722695 - the performance will be degraded.
    */
-  onContractCall<State>(
+  onContractCall<State, Err>(
     transaction: GQLNodeInterface,
     executionContext: ExecutionContext<State>,
-    state: EvalStateResult<State>
+    state: EvalStateResult<State, Err>
   ): Promise<void>;
 
   /**
    * loads the latest available state for given contract for given sortKey.
    */
-  latestAvailableState<State>(
+  latestAvailableState<State, Err>(
     contractTxId: string,
     sortKey?: string
-  ): Promise<SortKeyCacheResult<EvalStateResult<State>> | null>;
+  ): Promise<SortKeyCacheResult<EvalStateResult<State, Err>> | null>;
 
-  putInCache<State>(contractTxId: string, transaction: GQLNodeInterface, state: EvalStateResult<State>): Promise<void>;
+  putInCache<State, Err>(
+    contractTxId: string,
+    transaction: GQLNodeInterface,
+    state: EvalStateResult<State, Err>
+  ): Promise<void>;
 
   /**
    * allows to syncState with an external state source (like Warp Distributed Execution Network)
    */
   syncState(contractTxId: string, sortKey: string, state: any, validity: any): Promise<void>;
 
-  internalWriteState<State>(
+  internalWriteState<State, Err = unknown>(
     contractTxId: string,
     sortKey: string
-  ): Promise<SortKeyCacheResult<EvalStateResult<State>> | null>;
+  ): Promise<SortKeyCacheResult<EvalStateResult<State, Err>> | null>;
 
   dumpCache(): Promise<any>;
 
@@ -87,11 +91,11 @@ export interface StateEvaluator {
   allCachedContracts(): Promise<string[]>;
 }
 
-export class EvalStateResult<State> {
+export class EvalStateResult<State, Err> {
   constructor(
     readonly state: State,
     readonly validity: Record<string, boolean>,
-    readonly errorMessages: Record<string, string>
+    readonly errors: Record<string, Err>
   ) {}
 }
 

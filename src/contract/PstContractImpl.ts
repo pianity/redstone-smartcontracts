@@ -20,7 +20,10 @@ export class PstContractImpl extends HandlerBasedContract<PstState> implements P
     return (await super.readState()).cachedValue.state;
   }
 
-  async transfer(transfer: TransferInput, options?: WriteInteractionOptions): Promise<WriteInteractionResponse | null> {
+  async transfer(
+    transfer: TransferInput,
+    options?: WriteInteractionOptions
+  ): Promise<WriteInteractionResponse<unknown> | null> {
     return await this.writeInteraction<any>({ function: 'transfer', ...transfer }, options);
   }
 }

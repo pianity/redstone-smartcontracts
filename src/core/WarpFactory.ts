@@ -111,7 +111,7 @@ export class WarpFactory {
    * @param cacheOptions
    */
   static custom(arweave: Arweave, cacheOptions: CacheOptions, environment: WarpEnvironment): WarpBuilder {
-    const cache = new LevelDbCache<EvalStateResult<unknown>>({
+    const cache = new LevelDbCache<EvalStateResult<unknown, unknown>>({
       ...cacheOptions,
       dbLocation: `${cacheOptions.dbLocation}/state`
     });

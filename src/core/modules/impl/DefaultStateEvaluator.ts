@@ -35,31 +35,31 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
     private readonly executionContextModifiers: ExecutionContextModifier[] = []
   ) {}
 
-  async eval<State>(
-    executionContext: ExecutionContext<State, HandlerApi<State>>,
+  async eval<State, Err = unknown>(
+    executionContext: ExecutionContext<State, HandlerApi<State>, Err>,
     currentTx: CurrentTx[]
-  ): Promise<SortKeyCacheResult<EvalStateResult<State>>> {
+  ): Promise<SortKeyCacheResult<EvalStateResult<State, Err>>> {
     return this.doReadState(
       executionContext.sortedInteractions,
-      new EvalStateResult<State>(executionContext.contractDefinition.initState, {}, {}),
+      new EvalStateResult<State, Err>(executionContext.contractDefinition.initState, {}, {}),
       executionContext,
       currentTx
     );
   }
 
-  protected async doReadState<State>(
+  protected async doReadState<State, Err>(
     missingInteractions: GQLNodeInterface[],
-    baseState: EvalStateResult<State>,
+    baseState: EvalStateResult<State, Err>,
     executionContext: ExecutionContext<State, HandlerApi<State>>,
     currentTx: CurrentTx[]
-  ): Promise<SortKeyCacheResult<EvalStateResult<State>>> {
+  ): Promise<SortKeyCacheResult<EvalStateResult<State, Err>>> {
     const { ignoreExceptions, stackTrace, internalWrites } = executionContext.evaluationOptions;
     const { contract, contractDefinition, sortedInteractions } = executionContext;
 
     let currentState = baseState.state;
     let currentSortKey = null;
     const validity = baseState.validity;
-    const errorMessages = baseState.errorMessages;
+    const errors = baseState.errors;
 
     executionContext?.handler.initState(currentState);
 
@@ -72,7 +72,9 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
     );
 
     let errorMessage = null;
-    let lastConfirmedTxState: { tx: GQLNodeInterface; state: EvalStateResult<State> } = null;
+    let error = null;
+
+    let lastConfirmedTxState: { tx: GQLNodeInterface; state: EvalStateResult<State, Err> } = null;
 
     const missingInteractionsLength = missingInteractions.length;
     executionContext.handler.initState(currentState);
@@ -115,7 +117,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
         await this.onContractCall(
           missingInteraction,
           executionContext,
-          new EvalStateResult<State>(currentState, validity, errorMessages)
+          new EvalStateResult<State, Err>(currentState, validity, errors)
         );
 
         this.logger.debug(`${indent(depth)}Reading state of the calling contract at`, missingInteraction.sortKey);
@@ -133,18 +135,18 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
         ]);
 
         // loading latest state of THIS contract from cache
-        const newState = await this.internalWriteState<State>(contractDefinition.txId, missingInteraction.sortKey);
+        const newState = await this.internalWriteState<State, Err>(contractDefinition.txId, missingInteraction.sortKey);
         if (newState !== null) {
           currentState = newState.cachedValue.state;
           // we need to update the state in the wasm module
           executionContext?.handler.initState(currentState);
 
           validity[missingInteraction.id] = newState.cachedValue.validity[missingInteraction.id];
-          if (newState.cachedValue.errorMessages?.[missingInteraction.id]) {
-            errorMessages[missingInteraction.id] = newState.cachedValue.errorMessages[missingInteraction.id];
+          if (newState.cachedValue.errors?.[missingInteraction.id]) {
+            errors[missingInteraction.id] = newState.cachedValue.errors[missingInteraction.id];
           }
 
-          const toCache = new EvalStateResult(currentState, validity, errorMessages);
+          const toCache = new EvalStateResult(currentState, validity, errors);
           await this.onStateUpdate<State>(missingInteraction, executionContext, toCache);
           if (canBeCached(missingInteraction)) {
             lastConfirmedTxState = {
@@ -162,6 +164,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
           executionTime: singleInteractionBenchmark.elapsed(true) as number,
           valid: validity[missingInteraction.id],
           errorMessage: errorMessage,
+          error: error,
           gasUsed: 0 // TODO...
         });
       } else {
@@ -194,12 +197,13 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
         const result = await executionContext.handler.handle(
           executionContext,
-          new EvalStateResult(currentState, validity, errorMessages),
+          new EvalStateResult(currentState, validity, errors),
           interactionData
         );
         errorMessage = result.errorMessage;
+        error = result.error;
         if (result.type !== 'ok') {
-          errorMessages[missingInteraction.id] = errorMessage;
+          errors[missingInteraction.id] = error || errorMessage;
         }
 
         this.logResult<State>(result, missingInteraction, executionContext);
@@ -211,7 +215,8 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
           outputState: stackTrace.saveState ? currentState : undefined,
           executionTime: singleInteractionBenchmark.elapsed(true) as number,
           valid: validity[missingInteraction.id],
-          errorMessage: errorMessage,
+          errorMessage,
+          error,
           gasUsed: result.gasUsed
         });
 
@@ -222,7 +227,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
         validity[missingInteraction.id] = result.type === 'ok';
         currentState = result.state;
 
-        const toCache = new EvalStateResult(currentState, validity, errorMessages);
+        const toCache = new EvalStateResult<State, Err>(currentState, validity, errors);
         if (canBeCached(missingInteraction)) {
           lastConfirmedTxState = {
             tx: missingInteraction,
@@ -236,7 +241,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
         executionContext = await modify<State>(currentState, executionContext);
       }
     }
-    const evalStateResult = new EvalStateResult<State>(currentState, validity, errorMessages);
+    const evalStateResult = new EvalStateResult<State, Err>(currentState, validity, errors);
 
     // state could have been fully retrieved from cache
     // or there were no interactions below requested block height
@@ -266,7 +271,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
   }
 
   private logResult<State>(
-    result: InteractionResult<State, unknown>,
+    result: InteractionResult<State, unknown, unknown>,
     currentTx: GQLNodeInterface,
     executionContext: ExecutionContext<State, HandlerApi<State>>
   ) {
@@ -293,50 +298,50 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
     }
   }
 
-  abstract latestAvailableState<State>(
+  abstract latestAvailableState<State, Err = unknown>(
     contractTxId: string,
     sortKey?: string
-  ): Promise<SortKeyCacheResult<EvalStateResult<State>> | null>;
+  ): Promise<SortKeyCacheResult<EvalStateResult<State, Err>> | null>;
 
-  abstract onContractCall<State>(
+  abstract onContractCall<State, Err = unknown>(
     transaction: GQLNodeInterface,
     executionContext: ExecutionContext<State>,
-    state: EvalStateResult<State>
+    state: EvalStateResult<State, Err>
   ): Promise<void>;
 
-  abstract onInternalWriteStateUpdate<State>(
+  abstract onInternalWriteStateUpdate<State, Err = unknown>(
     transaction: GQLNodeInterface,
     contractTxId: string,
-    state: EvalStateResult<State>
+    state: EvalStateResult<State, Err>
   ): Promise<void>;
 
-  abstract onStateEvaluated<State>(
+  abstract onStateEvaluated<State, Err = unknown>(
     transaction: GQLNodeInterface,
     executionContext: ExecutionContext<State>,
-    state: EvalStateResult<State>
+    state: EvalStateResult<State, Err>
   ): Promise<void>;
 
-  abstract onStateUpdate<State>(
+  abstract onStateUpdate<State, Err = unknown>(
     transaction: GQLNodeInterface,
     executionContext: ExecutionContext<State>,
-    state: EvalStateResult<State>,
+    state: EvalStateResult<State, Err>,
     force?: boolean
   ): Promise<void>;
 
-  abstract putInCache<State>(
+  abstract putInCache<State, Err = unknown>(
     contractTxId: string,
     transaction: GQLNodeInterface,
-    state: EvalStateResult<State>
+    state: EvalStateResult<State, Err>
   ): Promise<void>;
 
   abstract syncState(contractTxId: string, sortKey: string, state: any, validity: any): Promise<void>;
 
   abstract dumpCache(): Promise<any>;
 
-  abstract internalWriteState<State>(
+  abstract internalWriteState<State, Err>(
     contractTxId: string,
     sortKey: string
-  ): Promise<SortKeyCacheResult<EvalStateResult<State>> | null>;
+  ): Promise<SortKeyCacheResult<EvalStateResult<State, Err>> | null>;
 
   abstract hasContractCached(contractTxId: string): Promise<boolean>;
 

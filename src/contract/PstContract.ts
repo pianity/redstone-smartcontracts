@@ -48,5 +48,8 @@ export interface PstContract extends Contract<PstState> {
    * allows to transfer PSTs between wallets
    * @param transfer - data required to perform a transfer, see {@link transfer}
    */
-  transfer(transfer: TransferInput, options?: WriteInteractionOptions): Promise<WriteInteractionResponse | null>;
+  transfer(
+    transfer: TransferInput,
+    options?: WriteInteractionOptions
+  ): Promise<WriteInteractionResponse<unknown> | null>;
 }

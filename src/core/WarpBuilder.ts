@@ -23,7 +23,7 @@ export class WarpBuilder {
 
   constructor(
     private readonly _arweave: Arweave,
-    private readonly _cache: LevelDbCache<EvalStateResult<unknown>>,
+    private readonly _cache: LevelDbCache<EvalStateResult<unknown, unknown>>,
     private readonly _environment: WarpEnvironment = 'custom'
   ) {}
 

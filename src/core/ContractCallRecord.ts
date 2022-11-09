@@ -75,7 +75,8 @@ export class InteractionOutput {
     public readonly outputState: any,
     public readonly executionTime: number,
     public readonly valid: boolean,
-    public readonly errorMessage: string = '',
+    public readonly error: unknown,
+    public readonly errorMessage: string,
     public readonly gasUsed: number
   ) {}
 }

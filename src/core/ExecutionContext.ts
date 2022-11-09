@@ -12,7 +12,7 @@ import { Warp } from './Warp';
  * contract's definition - which is very time consuming) multiple times
  * (eg. multiple calls to "loadContract" in "interactRead" in the current version of the Arweave's smartweave.js).
  */
-export type ExecutionContext<State, Api = unknown> = {
+export type ExecutionContext<State, Api = unknown, Err = unknown> = {
   /**
    * {@link Warp} client currently being used
    */
@@ -41,6 +41,6 @@ export type ExecutionContext<State, Api = unknown> = {
    */
   handler: Api;
   caller?: string; // note: this is only set for "viewState" operations
-  cachedState?: SortKeyCacheResult<EvalStateResult<State>>;
+  cachedState?: SortKeyCacheResult<EvalStateResult<State, Err>>;
   requestedSortKey?: string;
 };

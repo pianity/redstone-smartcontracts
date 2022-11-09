@@ -6,6 +6,7 @@ import { SmartWeaveGlobal } from '../../../../legacy/smartweave-global';
 import stringify from 'safe-stable-stringify';
 import { InteractionData, InteractionResult } from '../HandlerExecutorFactory';
 import { AbstractContractHandler } from './AbstractContractHandler';
+import { ContractError } from 'contract/Contract';
 
 export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
   constructor(
@@ -17,11 +18,11 @@ export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
     super(swGlobal, contractDefinition);
   }
 
-  async handle<Input, Result>(
+  async handle<Input, Result, Err>(
     executionContext: ExecutionContext<State>,
-    currentResult: EvalStateResult<State>,
+    currentResult: EvalStateResult<State, Err>,
     interactionData: InteractionData<Input>
-  ): Promise<InteractionResult<State, Result>> {
+  ): Promise<InteractionResult<State, Result, Err>> {
     try {
       const { interaction, interactionTx, currentTx } = interactionData;
 
@@ -30,7 +31,7 @@ export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
       this.swGlobal.gasLimit = executionContext.evaluationOptions.gasLimit;
       this.swGlobal.gasUsed = 0;
 
-      this.assignReadContractState<Input>(executionContext, currentTx, currentResult, interactionTx);
+      this.assignReadContractState<Input, Err>(executionContext, currentTx, currentResult, interactionTx);
       this.assignWrite(executionContext, currentTx);
 
       const handlerResult = await this.doHandle(interaction);
@@ -42,6 +43,15 @@ export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
         gasUsed: this.swGlobal.gasUsed
       };
     } catch (e) {
+      if (e instanceof ContractError) {
+        return {
+          type: 'error',
+          state: currentResult.state,
+          result: null,
+          error: e.error
+        };
+      }
+
       // note: as exceptions handling in WASM is currently somewhat non-existent
       // https://www.assemblyscript.org/status.html#exceptions
       // and since we have to somehow differentiate different types of exceptions
@@ -124,7 +134,7 @@ export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
           if (errorKey == 'RuntimeError') {
             throw new Error(`[RE:RE]${errorArgs}`);
           } else {
-            throw new Error(`[CE:${errorKey}${errorArgs}]`);
+            throw new ContractError(handleResult.Err);
           }
         }
       }

@@ -11,7 +11,10 @@ export class MigrationTool {
   private readonly logger = LoggerFactory.INST.create('MigrationTool');
   private readonly sorter: LexicographicalInteractionsSorter;
 
-  constructor(private readonly arweave: Arweave, private readonly levelDb: LevelDbCache<EvalStateResult<unknown>>) {
+  constructor(
+    private readonly arweave: Arweave,
+    private readonly levelDb: LevelDbCache<EvalStateResult<unknown, unknown>>
+  ) {
     this.sorter = new LexicographicalInteractionsSorter(arweave);
   }
 
