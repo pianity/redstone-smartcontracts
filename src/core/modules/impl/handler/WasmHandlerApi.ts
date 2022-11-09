@@ -6,7 +6,7 @@ import { SmartWeaveGlobal } from '../../../../legacy/smartweave-global';
 import stringify from 'safe-stable-stringify';
 import { InteractionData, InteractionResult } from '../HandlerExecutorFactory';
 import { AbstractContractHandler } from './AbstractContractHandler';
-import { ContractError } from 'contract/Contract';
+import { ContractError } from '../../../../contract/Contract';
 
 export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
   constructor(
