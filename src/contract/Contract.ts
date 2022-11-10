@@ -1,7 +1,7 @@
 import Transaction from 'arweave/node/lib/transaction';
 import { SortKeyCacheResult } from '../cache/SortKeyCache';
 import { ContractCallRecord } from '../core/ContractCallRecord';
-import { InteractionResult } from '../core/modules/impl/HandlerExecutorFactory';
+import { InteractionResult, InteractionResultType } from '../core/modules/impl/HandlerExecutorFactory';
 import { EvaluationOptions, EvalStateResult } from '../core/modules/StateEvaluator';
 import { GQLNodeInterface } from '../legacy/gqlResult';
 import { ArTransfer, Tags, ArWallet } from './deploy/CreateContract';
@@ -26,18 +26,36 @@ interface BundlrResponse {
   block: number;
 }
 
-export interface WriteInteractionResponseSuccess {
-  type: 'ok';
+export interface InteractionPostingResponse {
   bundlrResponse?: BundlrResponse;
   originalTxId: string;
 }
 
-export interface WriteInteractionResponseFailure<Err> {
-  type: 'error' | 'exception';
-  error: Err;
+export interface WriteInteractionResponseSuccess extends InteractionPostingResponse {
+  type: 'ok';
 }
 
+export type WriteInteractionResponseFailure<Err> = {
+  type: 'error' | 'exception';
+  error: Err;
+};
+
+// TODO noom: The types taking using `Strict extends boolean` require `WriteInteractionOptions`'s
+// `strict` field to also be `Strict`.
+
+// export type WriteInteractionResponse<Strict extends boolean, Err> = Strict extends false
+//   ? WriteInteractionResponseSuccess
+//   : WriteInteractionResponseSuccess | WriteInteractionResponseFailure<Err>;
+
 export type WriteInteractionResponse<Err> = WriteInteractionResponseSuccess | WriteInteractionResponseFailure<Err>;
+
+// export type CreateInteractionResponse<Strict extends boolean, Err> = Strict extends false
+//   ? { type: 'ok'; interactionTx: Transaction }
+//   : { type: InteractionResultType; error?: Err; interactionTx?: Transaction };
+
+export type CreateInteractionResponse<Err> =
+  | { type: 'ok'; interactionTx: Transaction }
+  | { type: InteractionResultType; error?: Err; interactionTx?: Transaction };
 
 export type WarpOptions = {
   vrf?: boolean;

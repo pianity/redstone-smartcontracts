@@ -32,16 +32,13 @@ import {
   WriteInteractionOptions,
   WriteInteractionResponse,
   InnerCallData,
-  ContractError
+  ContractError,
+  CreateInteractionResponse
 } from './Contract';
 import { Tags, ArTransfer, emptyTransfer, ArWallet } from './deploy/CreateContract';
 import { SourceData, SourceImpl } from './deploy/impl/SourceImpl';
 import { InnerWritesEvaluator } from './InnerWritesEvaluator';
 import { generateMockVrf } from '../utils/vrf';
-
-type CreateInteractionResult<Strict extends boolean, Err> = Strict extends false
-  ? { type: 'ok'; interactionTx: Transaction }
-  : { type: 'ok' | 'error' | 'exception'; error?: Err; interactionTx?: Transaction };
 
 /**
  * An implementation of {@link Contract} that is backwards compatible with current style
@@ -256,7 +253,7 @@ export class HandlerBasedContract<State, Err = unknown> implements Contract<Stat
         effectiveReward
       );
 
-      if (interaction.type === 'ok') {
+      if ((options.strict && interaction.type == 'ok') || !options.strict) {
         const response = await arweave.transactions.post(interaction.interactionTx);
 
         if (response.status !== 200) {
@@ -276,7 +273,17 @@ export class HandlerBasedContract<State, Err = unknown> implements Contract<Stat
         }
         return { type: 'ok', originalTxId: interaction.interactionTx.id };
       } else {
-        return { type: interaction.type, error: interaction.error };
+        if (interaction.type === 'ok') {
+          return {
+            type: interaction.type,
+            originalTxId: interaction.interactionTx.id
+          };
+        } else {
+          return {
+            type: interaction.type,
+            error: interaction.error
+          };
+        }
       }
     }
   }
@@ -288,7 +295,7 @@ export class HandlerBasedContract<State, Err = unknown> implements Contract<Stat
       strict: boolean;
       vrf: boolean;
     }
-  ): Promise<WriteInteractionResponse<Err> | null> {
+  ): Promise<WriteInteractionResponse<Err>> {
     this.logger.info('Bundle interaction input', input);
 
     const interaction = await this.createInteraction<Input, boolean>(
@@ -300,7 +307,7 @@ export class HandlerBasedContract<State, Err = unknown> implements Contract<Stat
       options.vrf
     );
 
-    if (interaction.type === 'ok') {
+    if ((options.strict && interaction.type == 'ok') || !options.strict) {
       const response = await fetch(`${this._evaluationOptions.bundlerUrl}gateway/sequencer/register`, {
         method: 'POST',
         body: JSON.stringify(interaction.interactionTx),
@@ -328,7 +335,17 @@ export class HandlerBasedContract<State, Err = unknown> implements Contract<Stat
         originalTxId: interaction.interactionTx.id
       };
     } else {
-      return { type: interaction.type, error: interaction.error };
+      if (interaction.type === 'ok') {
+        return {
+          type: interaction.type,
+          originalTxId: interaction.interactionTx.id
+        };
+      } else {
+        return {
+          type: interaction.type,
+          error: interaction.error
+        };
+      }
     }
   }
 
@@ -340,7 +357,7 @@ export class HandlerBasedContract<State, Err = unknown> implements Contract<Stat
     bundle = false,
     vrf = false,
     reward?: string
-  ): Promise<CreateInteractionResult<Strict, Err>> {
+  ): Promise<CreateInteractionResponse<Err>> {
     let handlerResult: InteractionResult<State, unknown, Err> | undefined;
 
     if (this._evaluationOptions.internalWrites) {
@@ -387,7 +404,7 @@ export class HandlerBasedContract<State, Err = unknown> implements Contract<Stat
 
     let interactionTx: Transaction | undefined;
 
-    if (!(strict && handlerResult?.type !== 'ok')) {
+    if ((strict && handlerResult?.type === 'ok') || !strict) {
       if (vrf) {
         tags.push({
           name: SmartWeaveTags.REQUEST_VRF,
@@ -409,7 +426,7 @@ export class HandlerBasedContract<State, Err = unknown> implements Contract<Stat
     }
 
     if (strict) {
-      const resultStrict: CreateInteractionResult<true, Err> = {
+      const resultStrict: CreateInteractionResponse<Err> = {
         type: handlerResult?.type ?? 'ok',
         interactionTx
       };
@@ -418,7 +435,7 @@ export class HandlerBasedContract<State, Err = unknown> implements Contract<Stat
         resultStrict.error = handlerResult.error;
       }
 
-      return resultStrict as CreateInteractionResult<Strict, Err>;
+      return resultStrict;
     } else {
       return {
         type: 'ok',
