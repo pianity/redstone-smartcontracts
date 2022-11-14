@@ -393,13 +393,8 @@ export class HandlerBasedContract<State, Err = unknown> implements Contract<Stat
       });
 
       this.logger.debug('Tags with inner calls', tags);
-    } else {
-      if (strict) {
-        handlerResult = await this.callContract<Input, Err>(input, undefined, undefined, tags, transfer, strict, vrf);
-        if (handlerResult.type !== 'ok') {
-          throw new ContractError<Err>(handlerResult.error);
-        }
-      }
+    } else if (strict) {
+      handlerResult = await this.callContract<Input, Err>(input, undefined, undefined, tags, transfer, strict, vrf);
     }
 
     let interactionTx: Transaction | undefined;
