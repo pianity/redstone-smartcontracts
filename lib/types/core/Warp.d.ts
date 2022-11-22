@@ -38,7 +38,7 @@ export declare class Warp {
      * @param contractTxId
      * @param callingContract
      */
-    contract<State, Err>(contractTxId: string, callingContract?: Contract, innerCallData?: InnerCallData): Contract<State, Err>;
+    contract<State, Input, Err>(contractTxId: string, callingContract?: Contract, innerCallData?: InnerCallData): Contract<State, Input, Err>;
     /**
      * Allows to connect to a contract that conforms to the Profit Sharing Token standard
      * @param contractTxId
