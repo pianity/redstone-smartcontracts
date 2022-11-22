@@ -58,12 +58,12 @@ export class Warp {
    * @param contractTxId
    * @param callingContract
    */
-  contract<State, Err>(
+  contract<State, Input, Err>(
     contractTxId: string,
     callingContract?: Contract,
     innerCallData?: InnerCallData
-  ): Contract<State, Err> {
-    return new HandlerBasedContract<State, Err>(contractTxId, this, callingContract, innerCallData);
+  ): Contract<State, Input, Err> {
+    return new HandlerBasedContract<State, Input, Err>(contractTxId, this, callingContract, innerCallData);
   }
 
   /**
