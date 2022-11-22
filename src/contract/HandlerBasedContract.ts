@@ -46,7 +46,7 @@ import { generateMockVrf } from '../utils/vrf';
  *
  * It requires {@link ExecutorFactory} that is using {@link HandlerApi} generic type.
  */
-export class HandlerBasedContract<State, Err = unknown> implements Contract<State, Err> {
+export class HandlerBasedContract<State, Input = unknown, Err = unknown> implements Contract<State, Input, Err> {
   private readonly logger = LoggerFactory.INST.create('HandlerBasedContract');
 
   private _callStack: ContractCallRecord;
@@ -169,43 +169,43 @@ export class HandlerBasedContract<State, Err = unknown> implements Contract<Stat
     return result;
   }
 
-  async viewState<Input, View>(
+  async viewState<View>(
     input: Input,
     tags: Tags = [],
     transfer: ArTransfer = emptyTransfer
   ): Promise<InteractionResult<State, View, Err>> {
     this.logger.info('View state for', this._contractTxId);
-    return await this.callContract<Input, View>(input, undefined, undefined, tags, transfer);
+    return await this.callContract<View>(input, undefined, undefined, tags, transfer);
   }
 
-  async viewStateForTx<Input, View>(
+  async viewStateForTx<View>(
     input: Input,
     interactionTx: GQLNodeInterface
   ): Promise<InteractionResult<State, View, Err>> {
     this.logger.info(`View state for ${this._contractTxId}`, interactionTx);
-    return await this.callContractForTx<Input, View>(input, interactionTx);
+    return await this.callContractForTx<View>(input, interactionTx);
   }
 
-  async dryWrite<Input>(
+  async dryWrite(
     input: Input,
     caller?: string,
     tags?: Tags,
     transfer?: ArTransfer
   ): Promise<InteractionResult<State, unknown, Err>> {
     this.logger.info('Dry-write for', this._contractTxId);
-    return await this.callContract<Input, unknown>(input, caller, undefined, tags, transfer);
+    return await this.callContract(input, caller, undefined, tags, transfer);
   }
 
-  async dryWriteFromTx<Input>(
+  async dryWriteFromTx(
     input: Input,
     transaction: GQLNodeInterface,
     currentTx?: CurrentTx[]
   ): Promise<InteractionResult<State, unknown, Err>> {
     this.logger.info(`Dry-write from transaction ${transaction.id} for ${this._contractTxId}`);
-    return await this.callContractForTx<Input, unknown>(input, transaction, currentTx || []);
+    return await this.callContractForTx(input, transaction, currentTx || []);
   }
 
-  async writeInteraction<Input>(
+  async writeInteraction(
     input: Input,
     options?: WriteInteractionOptions
   ): Promise<WriteInteractionResponse<Err> | null> {
@@ -237,13 +237,13 @@ export class HandlerBasedContract<State, Err = unknown> implements Contract<Stat
     }
 
     if (bundleInteraction) {
-      return await this.bundleInteraction<Input>(input, {
+      return await this.bundleInteraction(input, {
         tags: effectiveTags,
         strict: effectiveStrict,
         vrf: effectiveVrf
       });
     } else {
-      const interaction = await this.createInteraction<Input, boolean>(
+      const interaction = await this.createInteraction<boolean>(
         input,
         effectiveTags,
         effectiveTransfer,
@@ -288,7 +288,7 @@ export class HandlerBasedContract<State, Err = unknown> implements Contract<Stat
     }
   }
 
-  private async bundleInteraction<Input>(
+  private async bundleInteraction(
     input: Input,
     options: {
       tags: Tags;
@@ -298,7 +298,7 @@ export class HandlerBasedContract<State, Err = unknown> implements Contract<Stat
   ): Promise<WriteInteractionResponse<Err>> {
     this.logger.info('Bundle interaction input', input);
 
-    const interaction = await this.createInteraction<Input, boolean>(
+    const interaction = await this.createInteraction<boolean>(
       input,
       options.tags,
       emptyTransfer,
@@ -349,7 +349,7 @@ export class HandlerBasedContract<State, Err = unknown> implements Contract<Stat
     }
   }
 
-  private async createInteraction<Input, Strict extends boolean>(
+  private async createInteraction<Strict extends boolean>(
     input: Input,
     tags: Tags,
     transfer: ArTransfer,
@@ -367,15 +367,7 @@ export class HandlerBasedContract<State, Err = unknown> implements Contract<Stat
       // 3. Verify the callStack and search for any "internalWrites" transactions
       // 4. For each found "internalWrite" transaction - generate additional tag:
       // {name: 'InternalWrite', value: callingContractTxId}
-      const innerHandlerResult = await this.callContract<Input, Err>(
-        input,
-        undefined,
-        undefined,
-        tags,
-        transfer,
-        strict,
-        vrf
-      );
+      const innerHandlerResult = await this.callContract<Err>(input, undefined, undefined, tags, transfer, strict, vrf);
 
       if (strict) {
         handlerResult = innerHandlerResult;
@@ -394,7 +386,7 @@ export class HandlerBasedContract<State, Err = unknown> implements Contract<Stat
 
       this.logger.debug('Tags with inner calls', tags);
     } else if (strict) {
-      handlerResult = await this.callContract<Input, Err>(input, undefined, undefined, tags, transfer, strict, vrf);
+      handlerResult = await this.callContract<Err>(input, undefined, undefined, tags, transfer, strict, vrf);
     }
 
     let interactionTx: Transaction | undefined;
@@ -447,7 +439,7 @@ export class HandlerBasedContract<State, Err = unknown> implements Contract<Stat
     return this._callStack;
   }
 
-  connect(signer: ArWallet | SigningFunction): Contract<State, Err> {
+  connect(signer: ArWallet | SigningFunction): Contract<State, Input, Err> {
     if (typeof signer == 'function') {
       this.signer = signer;
     } else {
@@ -458,7 +450,7 @@ export class HandlerBasedContract<State, Err = unknown> implements Contract<Stat
     return this;
   }
 
-  setEvaluationOptions(options: Partial<EvaluationOptions>): Contract<State, Err> {
+  setEvaluationOptions(options: Partial<EvaluationOptions>): Contract<State, Input, Err> {
     this._evaluationOptions = {
       ...this._evaluationOptions,
       ...options
@@ -586,7 +578,7 @@ export class HandlerBasedContract<State, Err = unknown> implements Contract<Stat
     }
   }
 
-  private async callContract<Input, View = unknown>(
+  private async callContract<View = unknown>(
     input: Input,
     caller?: string,
     sortKey?: string,
@@ -666,7 +658,7 @@ export class HandlerBasedContract<State, Err = unknown> implements Contract<Stat
       dummyTx.vrf = generateMockVrf(dummyTx.sortKey, arweave);
     }
 
-    const handleResult = await this.evalInteraction<Input, View>(
+    const handleResult = await this.evalInteraction<View>(
       {
         interaction,
         interactionTx: dummyTx,
@@ -686,7 +678,7 @@ export class HandlerBasedContract<State, Err = unknown> implements Contract<Stat
     return handleResult;
   }
 
-  private async callContractForTx<Input, View = unknown>(
+  private async callContractForTx<View = unknown>(
     input: Input,
     interactionTx: GQLNodeInterface,
     currentTx?: CurrentTx[]
@@ -712,18 +704,14 @@ export class HandlerBasedContract<State, Err = unknown> implements Contract<Stat
       currentTx
     };
 
-    const result = await this.evalInteraction<Input, View>(
-      interactionData,
-      executionContext,
-      evalStateResult.cachedValue
-    );
+    const result = await this.evalInteraction<View>(interactionData, executionContext, evalStateResult.cachedValue);
     result.originalValidity = evalStateResult.cachedValue.validity;
     result.originalErrors = evalStateResult.cachedValue.errors;
 
     return result;
   }
 
-  private async evalInteraction<Input, View = unknown>(
+  private async evalInteraction<View = unknown>(
     interactionData: InteractionData<Input>,
     executionContext: ExecutionContext<State, HandlerApi<State>>,
     evalStateResult: EvalStateResult<State, Err>
@@ -801,7 +789,7 @@ export class HandlerBasedContract<State, Err = unknown> implements Contract<Stat
   }
 
   async evolve(newSrcTxId: string, options?: WriteInteractionOptions): Promise<WriteInteractionResponse<Err> | null> {
-    return await this.writeInteraction<any>({ function: 'evolve', value: newSrcTxId }, options);
+    return await this.writeInteraction({ function: 'evolve', value: newSrcTxId } as unknown as Input, options);
   }
 
   async save(sourceData: SourceData): Promise<any> {

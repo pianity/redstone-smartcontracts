@@ -97,7 +97,7 @@ export type InnerCallData = { callingInteraction: GQLNodeInterface; callType: In
  * A base interface to be implemented by SmartWeave Contracts clients
  * - contains "low-level" methods that allow to interact with any contract
  */
-export interface Contract<State = unknown, Err = unknown> extends Source {
+export interface Contract<State = unknown, Input = unknown, Err = unknown> extends Source {
   /**
    * Returns the Arweave transaction id of this contract.
    */
@@ -111,14 +111,14 @@ export interface Contract<State = unknown, Err = unknown> extends Source {
    *
    * @param signer - either {@link ArWallet} that will be connected to this contract or custom {@link SigningFunction}
    */
-  connect(signer: ArWallet | SigningFunction): Contract<State, Err>;
+  connect(signer: ArWallet | SigningFunction): Contract<State, Input, Err>;
 
   /**
    * Allows to set ({@link EvaluationOptions})
    *
    * @param options - a set of {@link EvaluationOptions} that will overwrite current configuration
    */
-  setEvaluationOptions(options: Partial<EvaluationOptions>): Contract<State, Err>;
+  setEvaluationOptions(options: Partial<EvaluationOptions>): Contract<State, Input, Err>;
 
   /**
    * Returns state of the contract at required sortKey or blockHeight.
@@ -150,7 +150,7 @@ export interface Contract<State = unknown, Err = unknown> extends Source {
    * @param transfer - additional {@link ArTransfer} data that can be attached to the interaction
    * transaction
    */
-  viewState<Input = unknown, View = unknown>(
+  viewState<View = unknown>(
     input: Input,
     tags?: Tags,
     transfer?: ArTransfer
@@ -168,7 +168,7 @@ export interface Contract<State = unknown, Err = unknown> extends Source {
    * TODO: this should not be exposed in a public API - as it is supposed
    * to be used only by Handler code.
    */
-  viewStateForTx<Input = unknown, View = unknown>(
+  viewStateForTx<View = unknown>(
     input: Input,
     transaction: GQLNodeInterface
   ): Promise<InteractionResult<State, View, Err>>;
@@ -183,14 +183,14 @@ export interface Contract<State = unknown, Err = unknown> extends Source {
    * @param caller - an option to override the caller - if available, this value will overwrite the caller evaluated
    * from the wallet connected to this contract.
    */
-  dryWrite<Input>(
+  dryWrite(
     input: Input,
     caller?: string,
     tags?: Tags,
     transfer?: ArTransfer
   ): Promise<InteractionResult<State, unknown, Err>>;
 
-  dryWriteFromTx<Input>(
+  dryWriteFromTx(
     input: Input,
     transaction: GQLNodeInterface,
     currentTx?: CurrentTx[]
@@ -199,10 +199,7 @@ export interface Contract<State = unknown, Err = unknown> extends Source {
   /**
    * Writes a new "interaction" transaction - i.e. such transaction that stores input for the contract.
    */
-  writeInteraction<Input = unknown>(
-    input: Input,
-    options?: WriteInteractionOptions
-  ): Promise<WriteInteractionResponse<Err> | null>;
+  writeInteraction(input: Input, options?: WriteInteractionOptions): Promise<WriteInteractionResponse<Err> | null>;
 
   /**
    * Returns the full call tree report the last
