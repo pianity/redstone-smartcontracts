@@ -13,7 +13,7 @@ import { SourceData } from './deploy/impl/SourceImpl';
  *
  * It requires {@link ExecutorFactory} that is using {@link HandlerApi} generic type.
  */
-export declare class HandlerBasedContract<State, Err = unknown> implements Contract<State, Err> {
+export declare class HandlerBasedContract<State, Input = unknown, Err = unknown> implements Contract<State, Input, Err> {
     private readonly _contractTxId;
     protected readonly warp: Warp;
     private readonly _parentContract;
@@ -33,17 +33,17 @@ export declare class HandlerBasedContract<State, Err = unknown> implements Contr
     protected signer?: SigningFunction;
     constructor(_contractTxId: string, warp: Warp, _parentContract?: Contract, _innerCallData?: InnerCallData);
     readState(sortKeyOrBlockHeight?: string | number, currentTx?: CurrentTx[], interactions?: GQLNodeInterface[]): Promise<SortKeyCacheResult<EvalStateResult<State, Err>>>;
-    viewState<Input, View>(input: Input, tags?: Tags, transfer?: ArTransfer): Promise<InteractionResult<State, View, Err>>;
-    viewStateForTx<Input, View>(input: Input, interactionTx: GQLNodeInterface): Promise<InteractionResult<State, View, Err>>;
-    dryWrite<Input>(input: Input, caller?: string, tags?: Tags, transfer?: ArTransfer): Promise<InteractionResult<State, unknown, Err>>;
-    dryWriteFromTx<Input>(input: Input, transaction: GQLNodeInterface, currentTx?: CurrentTx[]): Promise<InteractionResult<State, unknown, Err>>;
-    writeInteraction<Input>(input: Input, options?: WriteInteractionOptions): Promise<WriteInteractionResponse<Err> | null>;
+    viewState<View>(input: Input, tags?: Tags, transfer?: ArTransfer): Promise<InteractionResult<State, View, Err>>;
+    viewStateForTx<View>(input: Input, interactionTx: GQLNodeInterface): Promise<InteractionResult<State, View, Err>>;
+    dryWrite(input: Input, caller?: string, tags?: Tags, transfer?: ArTransfer): Promise<InteractionResult<State, unknown, Err>>;
+    dryWriteFromTx(input: Input, transaction: GQLNodeInterface, currentTx?: CurrentTx[]): Promise<InteractionResult<State, unknown, Err>>;
+    writeInteraction(input: Input, options?: WriteInteractionOptions): Promise<WriteInteractionResponse<Err> | null>;
     private bundleInteraction;
     private createInteraction;
     txId(): string;
     getCallStack(): ContractCallRecord;
-    connect(signer: ArWallet | SigningFunction): Contract<State, Err>;
-    setEvaluationOptions(options: Partial<EvaluationOptions>): Contract<State, Err>;
+    connect(signer: ArWallet | SigningFunction): Contract<State, Input, Err>;
+    setEvaluationOptions(options: Partial<EvaluationOptions>): Contract<State, Input, Err>;
     private waitForConfirmation;
     private createExecutionContext;
     private getToSortKey;
