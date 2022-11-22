@@ -60,7 +60,7 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
         callType: 'write'
       });
 
-      const result = await calleeContract.dryWriteFromTx<Input>(input, this.swGlobal._activeTx, [
+      const result = await calleeContract.dryWriteFromTx(input, this.swGlobal._activeTx, [
         ...(currentTx || []),
         {
           contractTxId: this.contractDefinition.txId,

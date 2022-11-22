@@ -7,9 +7,9 @@ interface BalanceInput {
   target: string;
 }
 
-export class PstContractImpl extends HandlerBasedContract<PstState> implements PstContract {
+export class PstContractImpl extends HandlerBasedContract<PstState, BalanceInput> implements PstContract {
   async currentBalance(target: string): Promise<BalanceResult> {
-    const interactionResult = await this.viewState<BalanceInput, BalanceResult>({ function: 'balance', target });
+    const interactionResult = await this.viewState<BalanceResult>({ function: 'balance', target });
     if (interactionResult.type !== 'ok') {
       throw Error(interactionResult.errorMessage);
     }
@@ -24,6 +24,6 @@ export class PstContractImpl extends HandlerBasedContract<PstState> implements P
     transfer: TransferInput,
     options?: WriteInteractionOptions
   ): Promise<WriteInteractionResponse<unknown> | null> {
-    return await this.writeInteraction<any>({ function: 'transfer', ...transfer }, options);
+    return await this.writeInteraction({ function: 'transfer', ...transfer }, options);
   }
 }
