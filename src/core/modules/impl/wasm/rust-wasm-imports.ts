@@ -72,6 +72,18 @@ export const rustWasmImports = (swGlobal, wbindgenImports, wasmInstance, dtorVal
       randomInt: function (maxValue: number): number {
         return swGlobal.vrf.randomInt(maxValue);
       }
+    },
+
+    Kv: {
+      put: async function (k, v) {
+        await swGlobal.kv.put(k, v);
+      },
+      get: function (k) {
+        return swGlobal.kv.get(k);
+      },
+      del: async function (k) {
+        await swGlobal.kv.del(k);
+      }
     }
   };
 
@@ -283,6 +295,27 @@ export const rustWasmImports = (swGlobal, wbindgenImports, wasmInstance, dtorVal
     __wbg_randomInt: function (arg0) {
       var ret = rawImports.Vrf.randomInt(arg0);
       return ret;
+    },
+
+    __wbg_put: function (arg0, arg1, arg2, arg3) {
+      try {
+        var ret = rawImports.Kv.put(getStringFromWasm0(arg0, arg1), getStringFromWasm0(arg2, arg3));
+        return addHeapObject(ret);
+      } finally {
+        wasmInstance.exports.__wbindgen_free(arg2, arg3);
+      }
+    },
+    __wbg_get: function (arg0, arg1) {
+      var ret = rawImports.Kv.get(getStringFromWasm0(arg0, arg1));
+      const heapobject = addHeapObject(ret);
+      return heapobject;
+    },
+    __wbg_del: function (arg0, arg1) {
+      try {
+        rawImports.Kv.del(getStringFromWasm0(arg0, arg1));
+      } finally {
+        wasmInstance.exports.__wbindgen_free(arg0, arg1);
+      }
     }
   };
 
