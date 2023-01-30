@@ -13,6 +13,8 @@ import { Signature, CustomSignature } from '../../../contract/Signature';
 import Transaction from 'arweave/node/lib/transaction';
 import { WARP_GW_URL } from '../../../core/WarpFactory';
 import { TagsParser } from '../../../core/modules/impl/TagsParser';
+import archiver from 'archiver';
+import streamBuffers from 'stream-buffers';
 
 const wasmTypeMapping: Map<number, string> = new Map([
   [1, 'assemblyscript'],
@@ -187,8 +189,6 @@ export class SourceImpl implements Source {
   }
 
   private async zipContents(source: PathOrFileDescriptor): Promise<Buffer> {
-    const archiver = require('archiver'),
-      streamBuffers = require('stream-buffers');
     const outputStreamBuffer = new streamBuffers.WritableStreamBuffer({
       initialSize: 1000 * 1024, // start at 1000 kilobytes.
       incrementAmount: 1000 * 1024 // grow by 1000 kilobytes each time buffer overflows.
