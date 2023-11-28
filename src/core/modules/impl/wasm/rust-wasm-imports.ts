@@ -95,6 +95,35 @@ export const rustWasmImports = (
       },
       put: async function (key: string, value: any): Promise<void> {
         await swGlobal.kv.put(key, value);
+      },
+      del: async function (key: string): Promise<void> {
+        await swGlobal.kv.del(key);
+      },
+      map: async function (
+        gte?: string,
+        lt?: string,
+        reverse?: boolean | undefined,
+        limit?: number | undefined
+      ): Promise<void> {
+        return await swGlobal.kv.kvMap({
+          gte,
+          lt,
+          reverse,
+          limit
+        });
+      },
+      keys: async function (
+        gte?: string,
+        lt?: string,
+        reverse?: boolean | undefined,
+        limit?: number | undefined
+      ): Promise<void> {
+        return await swGlobal.kv.keys({
+          gte,
+          lt,
+          reverse,
+          limit
+        });
       }
     },
     SmartWeave: {
@@ -212,8 +241,6 @@ export const rustWasmImports = (
         };
 
   function passStringToWasm0(arg, malloc, realloc) {
-    if (typeof arg !== 'string') throw new Error('expected a string argument');
-
     if (realloc === undefined) {
       const buf = cachedTextEncoder.encode(arg);
       const ptr = malloc(buf.length);
@@ -244,7 +271,7 @@ export const rustWasmImports = (
       ptr = realloc(ptr, len, (len = offset + arg.length * 3));
       const view = getUint8Memory0().subarray(ptr + offset, ptr + len);
       const ret = encodeString(arg, view);
-      if (ret.read !== arg.length) throw new Error('failed to pass whole string');
+
       offset += ret.written;
     }
 
@@ -381,9 +408,7 @@ export const rustWasmImports = (
       throw e;
     }
   }
-  function __wbg_adapter_52(arg0, arg1, arg2) {
-    _assertNum(arg0);
-    _assertNum(arg1);
+  function __wbg_adapter_50(arg0, arg1, arg2) {
     wasmInstance.modifiedExports._dyn_core__ops__function__FnMut__A____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__(
       arg0,
       arg1,
@@ -421,18 +446,8 @@ export const rustWasmImports = (
    */
   function initState(state) {
     try {
-      const retptr = wasmInstance.exports.__wbindgen_add_to_stack_pointer(-16);
-      wasmInstance.exports.initState(retptr, addBorrowedObject(state));
-      var r0 = getInt32Memory0()[retptr / 4 + 0];
-      var r1 = getInt32Memory0()[retptr / 4 + 1];
-      let v0;
-      if (r0 !== 0) {
-        v0 = getStringFromWasm0(r0, r1).slice();
-        wasmInstance.exports.__wbindgen_free(r0, r1 * 1);
-      }
-      return v0;
+      wasmInstance.exports.initState(addBorrowedObject(state));
     } finally {
-      wasmInstance.exports.__wbindgen_add_to_stack_pointer(16);
       heap[stack_pointer++] = undefined;
     }
   }
@@ -485,9 +500,7 @@ export const rustWasmImports = (
     }
   }
 
-  function __wbg_adapter_42(arg0, arg1, arg2, arg3) {
-    _assertNum(arg0);
-    _assertNum(arg1);
+  function __wbg_adapter_114(arg0, arg1, arg2, arg3) {
     wasmInstance.modifiedExports.wasm_bindgen__convert__closures__invoke2_mut__(
       arg0,
       arg1,
@@ -531,22 +544,17 @@ export const rustWasmImports = (
 
     __wbindgen_is_undefined: function (arg0) {
       const ret = getObject(arg0) === undefined;
-      _assertBoolean(ret);
       return ret;
     },
 
     __wbindgen_in: function (arg0, arg1) {
       const ret = getObject(arg0) in getObject(arg1);
-      _assertBoolean(ret);
       return ret;
     },
 
     __wbindgen_number_get: function (arg0, arg1) {
       const obj = getObject(arg1);
       const ret = typeof obj === 'number' ? obj : undefined;
-      if (!isLikeNone(ret)) {
-        _assertNum(ret);
-      }
       getFloat64Memory0()[arg0 / 8 + 1] = isLikeNone(ret) ? 0 : ret;
       getInt32Memory0()[arg0 / 4 + 0] = !isLikeNone(ret);
     },
@@ -582,14 +590,12 @@ export const rustWasmImports = (
 
     __wbindgen_is_bigint: function (arg0) {
       const ret = typeof getObject(arg0) === 'bigint';
-      _assertBoolean(ret);
       return ret;
     },
 
     __wbindgen_is_object: function (arg0) {
       const val = getObject(arg0);
       const ret = typeof val === 'object' && val !== null;
-      _assertBoolean(ret);
       return ret;
     },
 
@@ -600,7 +606,6 @@ export const rustWasmImports = (
 
     __wbindgen_jsval_eq: function (arg0, arg1) {
       const ret = getObject(arg0) === getObject(arg1);
-      _assertBoolean(ret);
       return ret;
     },
 
@@ -649,6 +654,37 @@ export const rustWasmImports = (
     __wbg_kvPut: function () {
       return handleError(function (arg0, arg1, arg2) {
         const ret = rawImports.KV.put(getStringFromWasm0(arg0, arg1), takeObject(arg2));
+        return addHeapObject(ret);
+      }, arguments);
+    },
+
+    __wbg_kvDel: function () {
+      return handleError(function (arg0, arg1) {
+        const ret = rawImports.KV.del(getStringFromWasm0(arg0, arg1));
+        return addHeapObject(ret);
+      }, arguments);
+    },
+
+    __wbg_kvMap: function () {
+      return handleError(function (arg0, arg1, arg2, arg3, arg4, arg5, arg6) {
+        const ret = rawImports.KV.map(
+          arg0 === 0 ? undefined : getStringFromWasm0(arg0, arg1),
+          arg2 === 0 ? undefined : getStringFromWasm0(arg2, arg3),
+          arg4 === 0xffffff ? undefined : arg4 !== 0,
+          arg5 === 0 ? undefined : arg6 >>> 0
+        );
+        return addHeapObject(ret);
+      }, arguments);
+    },
+
+    __wbg_kvKeys: function () {
+      return handleError(function (arg0, arg1, arg2, arg3, arg4, arg5, arg6) {
+        const ret = rawImports.KV.keys(
+          arg0 === 0 ? undefined : getStringFromWasm0(arg0, arg1),
+          arg2 === 0 ? undefined : getStringFromWasm0(arg2, arg3),
+          arg4 === 0xffffff ? undefined : arg4 !== 0,
+          arg5 === 0 ? undefined : arg6 >>> 0
+        );
         return addHeapObject(ret);
       }, arguments);
     },
@@ -747,32 +783,28 @@ export const rustWasmImports = (
       }, arguments);
     },
 
-    __wbg_id: function () {
-      return logError(function (arg0) {
-        const ret = rawImports.Transaction.id();
-        const ptr0 = passStringToWasm0(
-          ret,
-          wasmInstance.exports.__wbindgen_malloc,
-          wasmInstance.exports.__wbindgen_realloc
-        );
-        const len0 = WASM_VECTOR_LEN;
-        getInt32Memory0()[arg0 / 4 + 1] = len0;
-        getInt32Memory0()[arg0 / 4 + 0] = ptr0;
-      }, arguments);
+    __wbg_id: function (arg0) {
+      const ret = rawImports.Transaction.id();
+      const ptr0 = passStringToWasm0(
+        ret,
+        wasmInstance.exports.__wbindgen_malloc,
+        wasmInstance.exports.__wbindgen_realloc
+      );
+      const len0 = WASM_VECTOR_LEN;
+      getInt32Memory0()[arg0 / 4 + 1] = len0;
+      getInt32Memory0()[arg0 / 4 + 0] = ptr0;
     },
 
-    __wbg_owner: function () {
-      return logError(function (arg0) {
-        const ret = rawImports.Transaction.owner();
-        const ptr0 = passStringToWasm0(
-          ret,
-          wasmInstance.exports.__wbindgen_malloc,
-          wasmInstance.exports.__wbindgen_realloc
-        );
-        const len0 = WASM_VECTOR_LEN;
-        getInt32Memory0()[arg0 / 4 + 1] = len0;
-        getInt32Memory0()[arg0 / 4 + 0] = ptr0;
-      }, arguments);
+    __wbg_owner: function (arg0) {
+      const ret = rawImports.Transaction.owner();
+      const ptr0 = passStringToWasm0(
+        ret,
+        wasmInstance.exports.__wbindgen_malloc,
+        wasmInstance.exports.__wbindgen_realloc
+      );
+      const len0 = WASM_VECTOR_LEN;
+      getInt32Memory0()[arg0 / 4 + 1] = len0;
+      getInt32Memory0()[arg0 / 4 + 0] = ptr0;
     },
 
     __wbg_target: function () {
@@ -789,18 +821,16 @@ export const rustWasmImports = (
       }, arguments);
     },
 
-    __wbg_caller: function () {
-      return logError(function (arg0) {
-        const ret = rawImports.SmartWeave.caller();
-        const ptr0 = passStringToWasm0(
-          ret,
-          wasmInstance.exports.__wbindgen_malloc,
-          wasmInstance.exports.__wbindgen_realloc
-        );
-        const len0 = WASM_VECTOR_LEN;
-        getInt32Memory0()[arg0 / 4 + 1] = len0;
-        getInt32Memory0()[arg0 / 4 + 0] = ptr0;
-      }, arguments);
+    __wbg_caller: function (arg0) {
+      const ret = rawImports.SmartWeave.caller();
+      const ptr0 = passStringToWasm0(
+        ret,
+        wasmInstance.exports.__wbindgen_malloc,
+        wasmInstance.exports.__wbindgen_realloc
+      );
+      const len0 = WASM_VECTOR_LEN;
+      getInt32Memory0()[arg0 / 4 + 1] = len0;
+      getInt32Memory0()[arg0 / 4 + 0] = ptr0;
     },
 
     __wbg_value_b245bf3240b21a48: function () {
@@ -853,10 +883,8 @@ export const rustWasmImports = (
       }, arguments);
     },
 
-    __wbg_log: function () {
-      return logError(function (arg0, arg1) {
-        rawImports.console.log(getStringFromWasm0(arg0, arg1));
-      }, arguments);
+    __wbg_log: function (arg0, arg1) {
+      console.log(getStringFromWasm0(arg0, arg1));
     },
 
     __wbindgen_cb_drop: function (arg0) {
@@ -866,7 +894,6 @@ export const rustWasmImports = (
         return true;
       }
       const ret = false;
-      _assertBoolean(ret);
       return ret;
     },
 
@@ -890,17 +917,13 @@ export const rustWasmImports = (
       }, arguments);
     },
 
-    __wbg_getwithrefkey: function () {
-      return logError(function (arg0, arg1) {
-        const ret = getObject(arg0)[getObject(arg1)];
-        return addHeapObject(ret);
-      }, arguments);
+    __wbg_getwithrefkey: function (arg0, arg1) {
+      const ret = getObject(arg0)[getObject(arg1)];
+      return addHeapObject(ret);
     },
 
-    __wbg_set_841ac57cff3d672b: function () {
-      return logError(function (arg0, arg1, arg2) {
-        getObject(arg0)[takeObject(arg1)] = takeObject(arg2);
-      }, arguments);
+    __wbg_set_841ac57cff3d672b: function (arg0, arg1, arg2) {
+      getObject(arg0)[takeObject(arg1)] = takeObject(arg2);
     },
 
     __wbindgen_number_new: function (arg0) {
@@ -910,58 +933,42 @@ export const rustWasmImports = (
 
     __wbindgen_jsval_loose_eq: function (arg0, arg1) {
       const ret = getObject(arg0) == getObject(arg1);
-      _assertBoolean(ret);
       return ret;
     },
 
-    __wbg_get_27fe3dac1c4d0224: function () {
-      return logError(function (arg0, arg1) {
-        const ret = getObject(arg0)[arg1 >>> 0];
-        return addHeapObject(ret);
-      }, arguments);
+    __wbg_get_27fe3dac1c4d0224: function (arg0, arg1) {
+      const ret = getObject(arg0)[arg1 >>> 0];
+      return addHeapObject(ret);
     },
 
-    __wbg_set_17224bc548dd1d7b: function () {
-      return logError(function (arg0, arg1, arg2) {
-        getObject(arg0)[arg1 >>> 0] = takeObject(arg2);
-      }, arguments);
+    __wbg_set_17224bc548dd1d7b: function (arg0, arg1, arg2) {
+      getObject(arg0)[arg1 >>> 0] = takeObject(arg2);
     },
 
-    __wbg_isArray: function () {
-      return logError(function (arg0) {
-        const ret = Array.isArray(getObject(arg0));
-        _assertBoolean(ret);
-        return ret;
-      }, arguments);
+    __wbg_isArray: function (arg0) {
+      const ret = Array.isArray(getObject(arg0));
+      return ret;
     },
 
-    __wbg_length_e498fbc24f9c1d4f: function () {
-      return logError(function (arg0) {
-        const ret = getObject(arg0).length;
-        _assertNum(ret);
-        return ret;
-      }, arguments);
+    __wbg_length_e498fbc24f9c1d4f: function (arg0) {
+      const ret = getObject(arg0).length;
+      return ret;
     },
 
     __wbg_new_b525de17f44a8943: function () {
-      return logError(function () {
-        const ret = new Array();
-        return addHeapObject(ret);
-      }, arguments);
+      const ret = new Array();
+      return addHeapObject(ret);
     },
 
-    __wbg_instanceof_ArrayBuffer: function () {
-      return logError(function (arg0) {
-        let result;
-        try {
-          result = getObject(arg0) instanceof ArrayBuffer;
-        } catch {
-          result = false;
-        }
-        const ret = result;
-        _assertBoolean(ret);
-        return ret;
-      }, arguments);
+    __wbg_instanceof_ArrayBuffer: function (arg0) {
+      let result;
+      try {
+        result = getObject(arg0) instanceof ArrayBuffer;
+      } catch {
+        result = false;
+      }
+      const ret = result;
+      return ret;
     },
 
     __wbg_call_95d1ea488d03e4e8: function () {
@@ -986,17 +993,13 @@ export const rustWasmImports = (
     },
 
     __wbg_new_f841cc6f2098f4b5: function () {
-      return logError(function () {
-        const ret = new Map();
-        return addHeapObject(ret);
-      }, arguments);
+      const ret = new Map();
+      return addHeapObject(ret);
     },
 
-    __wbg_set_388c4c6422704173: function () {
-      return logError(function (arg0, arg1, arg2) {
-        const ret = getObject(arg0).set(getObject(arg1), getObject(arg2));
-        return addHeapObject(ret);
-      }, arguments);
+    __wbg_set_388c4c6422704173: function (arg0, arg1, arg2) {
+      const ret = getObject(arg0).set(getObject(arg1), getObject(arg2));
+      return addHeapObject(ret);
     },
 
     __wbg_next_88560ec06a094dea: function () {
@@ -1006,110 +1009,68 @@ export const rustWasmImports = (
       }, arguments);
     },
 
-    __wbg_next_b7d530c04fd8b217: function () {
-      return logError(function (arg0) {
-        const ret = getObject(arg0).next;
-        return addHeapObject(ret);
-      }, arguments);
+    __wbg_next_b7d530c04fd8b217: function (arg0) {
+      const ret = getObject(arg0).next;
+      return addHeapObject(ret);
     },
 
-    __wbg_done: function () {
-      return logError(function (arg0) {
-        const ret = getObject(arg0).done;
-        _assertBoolean(ret);
-        return ret;
-      }, arguments);
+    __wbg_done: function (arg0) {
+      const ret = getObject(arg0).done;
+      return ret;
     },
 
-    __wbg_value_6ac8da5cc5b3efda: function () {
-      return logError(function (arg0) {
-        const ret = getObject(arg0).value;
-        return addHeapObject(ret);
-      }, arguments);
+    __wbg_value_6ac8da5cc5b3efda: function (arg0) {
+      const ret = getObject(arg0).value;
+      return addHeapObject(ret);
     },
 
-    __wbg_isSafeInteger: function () {
-      return logError(function (arg0) {
-        const ret = Number.isSafeInteger(getObject(arg0));
-        _assertBoolean(ret);
-        return ret;
-      }, arguments);
+    __wbg_isSafeInteger: function (arg0) {
+      const ret = Number.isSafeInteger(getObject(arg0));
+      return ret;
     },
 
-    __wbg_entries: function () {
-      return logError(function (arg0) {
-        const ret = Object.entries(getObject(arg0));
-        return addHeapObject(ret);
-      }, arguments);
+    __wbg_entries: function (arg0) {
+      const ret = Object.entries(getObject(arg0));
+      return addHeapObject(ret);
     },
 
     __wbg_new_f9876326328f45ed: function () {
-      return logError(function () {
-        const ret = new Object();
-        return addHeapObject(ret);
-      }, arguments);
+      const ret = new Object();
+      return addHeapObject(ret);
     },
 
     __wbg_iterator: function () {
-      return logError(function () {
-        const ret = Symbol.iterator;
-        return addHeapObject(ret);
-      }, arguments);
+      const ret = Symbol.iterator;
+      return addHeapObject(ret);
     },
 
-    __wbg_new_9d3a9ce4282a18a8: function () {
-      return logError(function (arg0, arg1) {
-        try {
-          var state0 = { a: arg0, b: arg1 };
-          var cb0 = (arg0, arg1) => {
-            const a = state0.a;
-            state0.a = 0;
-            try {
-              return __wbg_adapter_42(a, state0.b, arg0, arg1);
-            } finally {
-              state0.a = a;
-            }
-          };
-          const ret = new Promise(cb0);
-          return addHeapObject(ret);
-        } finally {
-          state0.a = state0.b = 0;
-        }
-      }, arguments);
+    __wbg_new_9d3a9ce4282a18a8: function (arg0, arg1) {
+      try {
+        var state0 = { a: arg0, b: arg1 };
+        var cb0 = (arg0, arg1) => {
+          const a = state0.a;
+          state0.a = 0;
+          try {
+            return __wbg_adapter_114(a, state0.b, arg0, arg1);
+          } finally {
+            state0.a = a;
+          }
+        };
+        const ret = new Promise(cb0);
+        return addHeapObject(ret);
+      } finally {
+        state0.a = state0.b = 0;
+      }
     },
 
-    __wbg_new_4beacc9c71572250: function () {
-      return logError(function (arg0, arg1) {
-        try {
-          var state0 = { a: arg0, b: arg1 };
-          var cb0 = (arg0, arg1) => {
-            const a = state0.a;
-            state0.a = 0;
-            try {
-              return __wbg_adapter_42(a, state0.b, arg0, arg1);
-            } finally {
-              state0.a = a;
-            }
-          };
-          const ret = new Promise(cb0);
-          return addHeapObject(ret);
-        } finally {
-          state0.a = state0.b = 0;
-        }
-      }, arguments);
-    },
-    __wbg_resolve: function () {
-      return logError(function (arg0) {
-        const ret = Promise.resolve(getObject(arg0));
-        return addHeapObject(ret);
-      }, arguments);
+    __wbg_resolve: function (arg0) {
+      const ret = Promise.resolve(getObject(arg0));
+      return addHeapObject(ret);
     },
 
-    __wbg_then_ec5db6d509eb475f: function () {
-      return logError(function (arg0, arg1) {
-        const ret = getObject(arg0).then(getObject(arg1));
-        return addHeapObject(ret);
-      }, arguments);
+    __wbg_then_ec5db6d509eb475f: function (arg0, arg1) {
+      const ret = getObject(arg0).then(getObject(arg1));
+      return addHeapObject(ret);
     },
     __wbg_then_a6860c82b90816ca: function () {
       return logError(function (arg0, arg1) {
@@ -1117,11 +1078,9 @@ export const rustWasmImports = (
         return addHeapObject(ret);
       }, arguments);
     },
-    __wbg_then_f753623316e2873a: function () {
-      return logError(function (arg0, arg1, arg2) {
-        const ret = getObject(arg0).then(getObject(arg1), getObject(arg2));
-        return addHeapObject(ret);
-      }, arguments);
+    __wbg_then_f753623316e2873a: function (arg0, arg1, arg2) {
+      const ret = getObject(arg0).then(getObject(arg1), getObject(arg2));
+      return addHeapObject(ret);
     },
     __wbg_then_58a04e42527f52c6: function () {
       return logError(function (arg0, arg1, arg2) {
@@ -1130,58 +1089,44 @@ export const rustWasmImports = (
       }, arguments);
     },
 
-    __wbg_instanceof_Uint8Array: function () {
-      return logError(function (arg0) {
-        let result;
-        try {
-          result = getObject(arg0) instanceof Uint8Array;
-        } catch {
-          result = false;
-        }
-        const ret = result;
-        _assertBoolean(ret);
-        return ret;
-      }, arguments);
+    __wbg_instanceof_Uint8Array: function (arg0) {
+      let result;
+      try {
+        result = getObject(arg0) instanceof Uint8Array;
+      } catch {
+        result = false;
+      }
+      const ret = result;
+      return ret;
     },
 
-    __wbg_new_537b7341ce90bb31: function () {
-      return logError(function (arg0) {
-        const ret = new Uint8Array(getObject(arg0));
-        return addHeapObject(ret);
-      }, arguments);
+    __wbg_new_537b7341ce90bb31: function (arg0) {
+      const ret = new Uint8Array(getObject(arg0));
+      return addHeapObject(ret);
     },
 
-    __wbg_length_27a2afe8ab42b09f: function () {
-      return logError(function (arg0) {
-        const ret = getObject(arg0).length;
-        _assertNum(ret);
-        return ret;
-      }, arguments);
+    __wbg_length_27a2afe8ab42b09f: function (arg0) {
+      const ret = getObject(arg0).length;
+      return ret;
     },
 
-    __wbg_set_17499e8aa4003ebd: function () {
-      return logError(function (arg0, arg1, arg2) {
-        getObject(arg0).set(getObject(arg1), arg2 >>> 0);
-      }, arguments);
+    __wbg_set_17499e8aa4003ebd: function (arg0, arg1, arg2) {
+      getObject(arg0).set(getObject(arg1), arg2 >>> 0);
     },
 
     __wbindgen_is_function: function (arg0) {
       const ret = typeof getObject(arg0) === 'function';
-      _assertBoolean(ret);
       return ret;
     },
 
     __wbindgen_is_string: function (arg0) {
       const ret = typeof getObject(arg0) === 'string';
-      _assertBoolean(ret);
       return ret;
     },
 
-    __wbg_buffer: function () {
-      return logError(function (arg0) {
-        const ret = getObject(arg0).buffer;
-        return addHeapObject(ret);
-      }, arguments);
+    __wbg_buffer: function (arg0) {
+      const ret = getObject(arg0).buffer;
+      return addHeapObject(ret);
     },
 
     __wbg_get_baf4855f9a986186: function () {
@@ -1206,9 +1151,6 @@ export const rustWasmImports = (
     __wbindgen_bigint_get_as_i64: function (arg0, arg1) {
       const v = getObject(arg1);
       const ret = typeof v === 'bigint' ? v : undefined;
-      if (!isLikeNone(ret)) {
-        _assertBigInt(ret);
-      }
       getBigInt64Memory0()[arg0 / 8 + 1] = isLikeNone(ret) ? BigInt(0) : ret;
       getInt32Memory0()[arg0 / 4 + 0] = !isLikeNone(ret);
     },
@@ -1222,11 +1164,9 @@ export const rustWasmImports = (
       return addHeapObject(ret);
     },
 
-    __wbindgen_closure_wrapper: function () {
-      return logError(function (arg0, arg1, arg2) {
-        const ret = makeMutClosure(arg0, arg1, dtorValue, __wbg_adapter_52);
-        return addHeapObject(ret);
-      }, arguments);
+    __wbindgen_closure_wrapper: function (arg0, arg1, arg2) {
+      const ret = makeMutClosure(arg0, arg1, dtorValue, __wbg_adapter_50);
+      return addHeapObject(ret);
     }
   };
 
@@ -1246,8 +1186,8 @@ export const rustWasmImports = (
     takeObject,
     wasm: () => wasmInstance.exports,
     WASM_VECTOR_LEN: () => WASM_VECTOR_LEN,
-    __wbg_adapter_4: __wbg_adapter_42,
-    __wbg_adapter_3: __wbg_adapter_52
+    __wbg_adapter_1: __wbg_adapter_114,
+    __wbg_adapter_5: __wbg_adapter_50
   };
 
   function wrapPluginMethod(f: (_: Object) => Object) {
