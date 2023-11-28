@@ -3,6 +3,7 @@ import { SortKeyCacheResult } from '../cache/SortKeyCache';
 import { ContractCallRecord, InteractionCall } from '../core/ContractCallRecord';
 import { ExecutionContext } from '../core/ExecutionContext';
 import {
+  ContractError,
   ContractInteraction,
   HandlerApi,
   InteractionData,
@@ -461,7 +462,9 @@ export class HandlerBasedContract<State> implements Contract<State> {
         ? await arweave.wallets.ownerToAddress(owner)
         : await this._signature.getAddress();
     const handlerResult = await this.callContract(input, 'write', caller, undefined, tags, transfer, strict, vrf);
-    if (handlerResult.type !== 'ok') {
+    if (handlerResult.type === 'error') {
+      throw new ContractError(handlerResult.error);
+    } else if (handlerResult.type !== 'ok') {
       throw Error('Cannot create interaction: ' + JSON.stringify(handlerResult.error || handlerResult.errorMessage));
     }
   }
@@ -1034,8 +1037,12 @@ export class HandlerBasedContract<State> implements Contract<State> {
       false
     );
 
-    if (strict && handlerResult.type !== 'ok') {
-      throw Error('Cannot create interaction: ' + JSON.stringify(handlerResult.error || handlerResult.errorMessage));
+    if (strict) {
+      if (handlerResult.type === 'error') {
+        throw new ContractError(handlerResult.error);
+      } else if (handlerResult.type !== 'ok') {
+        throw Error('Cannot create interaction: ' + JSON.stringify(handlerResult.error || handlerResult.errorMessage));
+      }
     }
     const callStack: ContractCallRecord = this.getCallStack();
     const innerWrites = this._innerWritesEvaluator.eval(callStack);

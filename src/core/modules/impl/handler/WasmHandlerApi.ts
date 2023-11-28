@@ -120,8 +120,9 @@ export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
     if (typeof handleResult.Err === 'string' || handleResult.Err instanceof String) {
       errorKey = handleResult.Err;
     } else if ('kind' in handleResult.Err) {
+      throw new ContractError(handleResult.Err);
       errorKey = handleResult.Err.kind;
-      errorArgs = 'data' in handleResult.Err ? ' ' + handleResult.Err.data : '';
+      errorArgs = 'data' in handleResult.Err ? ' ' + JSON.stringify(handleResult.Err.data, null, 2) : '';
     } else {
       errorKey = Object.keys(handleResult.Err)[0];
       errorArgs = ' ' + handleResult.Err[errorKey];
