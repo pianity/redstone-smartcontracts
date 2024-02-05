@@ -1,5 +1,5 @@
 import Arweave from 'arweave';
-import { DefinitionLoader } from './modules/DefinitionLoader';
+import { CacheableDefinitionLoader } from './modules/DefinitionLoader';
 import { ExecutorFactory } from './modules/ExecutorFactory';
 import { HandlerApi } from './modules/impl/HandlerExecutorFactory';
 import { InteractionsLoader } from './modules/InteractionsLoader';
@@ -16,7 +16,7 @@ export declare class WarpBuilder {
     private _executorFactory?;
     private _stateEvaluator?;
     constructor(_arweave: Arweave, _stateCache: BasicSortKeyCache<EvalStateResult<unknown>>, _environment?: WarpEnvironment);
-    setDefinitionLoader(value: DefinitionLoader): WarpBuilder;
+    setDefinitionLoader(value: CacheableDefinitionLoader): WarpBuilder;
     setInteractionsLoader(value: InteractionsLoader): WarpBuilder;
     setExecutorFactory(value: ExecutorFactory<HandlerApi<unknown>>): WarpBuilder;
     setStateEvaluator(value: StateEvaluator): WarpBuilder;
@@ -24,7 +24,7 @@ export declare class WarpBuilder {
         [key: string]: string;
     }): Warp;
     useWarpGateway(gatewayOptions: GatewayOptions, cacheOptions: CacheOptions): WarpBuilder;
-    useArweaveGateway(): WarpBuilder;
+    useArweaveGateway(cacheOptions: CacheOptions): WarpBuilder;
     build(): Warp;
 }
 //# sourceMappingURL=WarpBuilder.d.ts.map

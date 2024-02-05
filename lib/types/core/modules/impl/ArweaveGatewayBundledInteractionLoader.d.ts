@@ -27,7 +27,7 @@ export declare class ArweaveGatewayBundledInteractionLoader implements Interacti
     private readonly sorter;
     private readonly tagsParser;
     constructor(arweave: Arweave, environment: WarpEnvironment);
-    load(contractId: string, fromSortKey?: string, toSortKey?: string, evaluationOptions?: EvaluationOptions): Promise<GQLNodeInterface[]>;
+    load(contractId: string, fromSortKey?: string, toSortKey?: string, evaluationOptions?: EvaluationOptions, signal?: AbortSignal): Promise<GQLNodeInterface[]>;
     private verifySortKeyIntegrity;
     private isSortKeyInBounds;
     private attachSequencerDataToInteraction;

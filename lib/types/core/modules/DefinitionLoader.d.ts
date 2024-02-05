@@ -10,6 +10,8 @@ import { BasicSortKeyCache } from '../../cache/BasicSortKeyCache';
 export interface DefinitionLoader extends GwTypeAware, WarpAware {
     load<State>(contractTxId: string, evolvedSrcTxId?: string): Promise<ContractDefinition<State>>;
     loadContractSource(srcTxId: string): Promise<ContractSource>;
+}
+export interface CacheableDefinitionLoader extends DefinitionLoader {
     setCache(cache: BasicSortKeyCache<ContractCache<unknown>>): void;
     setSrcCache(cacheSrc?: BasicSortKeyCache<SrcCache>): void;
     getCache(): BasicSortKeyCache<ContractCache<unknown>>;

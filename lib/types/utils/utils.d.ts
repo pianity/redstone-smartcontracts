@@ -22,4 +22,5 @@ export declare class NetworkCommunicationError<T> extends Error {
 }
 export declare function getJsonResponse<T>(response: Promise<Response>): Promise<T>;
 export declare function safeGet<T>(input: RequestInfo | URL, init?: RequestInit): Promise<T>;
+export declare function isTxIdValid(txId: string): boolean;
 //# sourceMappingURL=utils.d.ts.map

@@ -39,6 +39,9 @@ export interface DREContractStatusResponse<State> {
 export type WarpOptions = {
     vrf?: boolean;
     disableBundling?: boolean;
+    manifestData?: {
+        [path: string]: string;
+    };
 };
 export type ArweaveOptions = {
     transfer?: ArTransfer;
@@ -101,8 +104,14 @@ export interface Contract<State = unknown> {
      * be skipped during contract inner calls - to prevent the infinite call loop issue
      * (mostly related to contract that use the Foreign Call Protocol)
      */
-    readState(sortKeyOrBlockHeight?: string | number, caller?: string, interactions?: GQLNodeInterface[]): Promise<SortKeyCacheResult<EvalStateResult<State>>>;
-    readStateFor(sortKey: string, interactions: GQLNodeInterface[]): Promise<SortKeyCacheResult<EvalStateResult<State>>>;
+    readState(sortKeyOrBlockHeight?: string | number, interactions?: GQLNodeInterface[], signal?: AbortSignal): Promise<SortKeyCacheResult<EvalStateResult<State>>>;
+    /**
+     * Reads state in batches - i.e. it first loads max. 5k interactions, evaluates them, then reads another 5k..and so on.
+     *
+     * Consider this as an experimental feature
+     */
+    readStateBatch(pagesPerBatch: number, sortKey?: string, signal?: AbortSignal): Promise<SortKeyCacheResult<EvalStateResult<State>>>;
+    readStateFor(sortKey: string, interactions: GQLNodeInterface[], signal?: AbortSignal): Promise<SortKeyCacheResult<EvalStateResult<State>>>;
     /**
      * Returns the "view" of the state, computed by the SWC -
      * i.e. object that is a derivative of a current state and some specific
@@ -119,7 +128,7 @@ export interface Contract<State = unknown> {
      * @param caller - caller of the view state operation
      * transaction
      */
-    viewState<Input = unknown, View = unknown>(input: Input, tags?: Tags, transfer?: ArTransfer, caller?: string): Promise<InteractionResult<State, View>>;
+    viewState<Input = unknown, View = unknown>(input: Input, tags?: Tags, transfer?: ArTransfer, caller?: string, signal?: AbortSignal): Promise<InteractionResult<State, View>>;
     /**
      * A version of the viewState method to be used from within the contract's source code.
      * The transaction passed as an argument is the currently processed interaction transaction.
@@ -132,7 +141,7 @@ export interface Contract<State = unknown> {
      * TODO: this should not be exposed in a public API - as it is supposed
      * to be used only by Handler code.
      */
-    viewStateForTx<Input = unknown, View = unknown>(input: Input, transaction: GQLNodeInterface): Promise<InteractionResult<State, View>>;
+    viewStateForTx<Input = unknown, View = unknown>(input: Input, transaction: GQLNodeInterface, signal?: AbortSignal): Promise<InteractionResult<State, View>>;
     /**
      * A dry-write operation on contract. It first loads the contract's state and then
      * creates a "dummy" transaction and applies the given Input on top of the current contract's
@@ -145,14 +154,14 @@ export interface Contract<State = unknown> {
      * @param vrf - whether a mock VRF data should be generated
      */
     dryWrite<Input>(input: Input, caller?: string, tags?: Tags, transfer?: ArTransfer, vrf?: boolean): Promise<InteractionResult<State, unknown>>;
-    applyInput<Input>(input: Input, transaction: GQLNodeInterface): Promise<InteractionResult<State, unknown>>;
+    applyInput<Input>(input: Input, transaction: GQLNodeInterface, signal?: AbortSignal): Promise<InteractionResult<State, unknown>>;
     /**
      * Writes a new "interaction" transaction - i.e. such transaction that stores input for the contract.
      */
     writeInteraction<Input = unknown>(input: Input, options?: WriteInteractionOptions): Promise<WriteInteractionResponse | null>;
     /**
      * Returns the full call tree report the last
-     * interaction with contract (eg. after reading state)
+     * interaction with contract (e.g. after reading state)
      */
     getCallStack(): ContractCallRecord;
     /**

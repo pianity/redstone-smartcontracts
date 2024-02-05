@@ -4,7 +4,7 @@ import { Contract, InnerCallData } from '../contract/Contract';
 import { ArWallet, RegisterProviderType, ContractData, ContractDeploy, FromSrcTxContractData } from '../contract/deploy/CreateContract';
 import { PstContract } from '../contract/PstContract';
 import { Testing, Wallet } from '../contract/testing/Testing';
-import { DefinitionLoader } from './modules/DefinitionLoader';
+import { CacheableDefinitionLoader } from './modules/DefinitionLoader';
 import { ExecutorFactory } from './modules/ExecutorFactory';
 import { HandlerApi } from './modules/impl/HandlerExecutorFactory';
 import { InteractionsLoader } from './modules/InteractionsLoader';
@@ -30,7 +30,7 @@ export type KVStorageFactory = (contractTxId: string) => SortKeyCache<unknown>;
  */
 export declare class Warp {
     readonly arweave: Arweave;
-    readonly definitionLoader: DefinitionLoader;
+    readonly definitionLoader: CacheableDefinitionLoader;
     readonly interactionsLoader: InteractionsLoader;
     readonly executorFactory: ExecutorFactory<HandlerApi<unknown>>;
     readonly stateEvaluator: StateEvaluator;
@@ -43,7 +43,7 @@ export declare class Warp {
     whoAmI: string;
     eventTarget: EventTarget;
     private readonly plugins;
-    constructor(arweave: Arweave, definitionLoader: DefinitionLoader, interactionsLoader: InteractionsLoader, executorFactory: ExecutorFactory<HandlerApi<unknown>>, stateEvaluator: StateEvaluator, environment?: WarpEnvironment);
+    constructor(arweave: Arweave, definitionLoader: CacheableDefinitionLoader, interactionsLoader: InteractionsLoader, executorFactory: ExecutorFactory<HandlerApi<unknown>>, stateEvaluator: StateEvaluator, environment?: WarpEnvironment);
     static builder(arweave: Arweave, stateCache: BasicSortKeyCache<EvalStateResult<unknown>>, environment: WarpEnvironment): WarpBuilder;
     /**
      * Allows to connect to any contract using its transaction id.

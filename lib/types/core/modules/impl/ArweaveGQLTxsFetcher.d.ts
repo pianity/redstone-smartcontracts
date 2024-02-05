@@ -27,7 +27,7 @@ export declare class ArweaveGQLTxsFetcher {
      * Fetches transaction stored using legacy bundling format.
      */
     transactionUsingUploaderTag(transactionId: string): Promise<GQLTransaction>;
-    transactions(variables: ArweaveTransactionQuery): Promise<GQLEdgeInterface[]>;
+    transactions(variables: ArweaveTransactionQuery, pagesPerBatch: number, signal?: AbortSignal): Promise<GQLEdgeInterface[]>;
     private fetch;
 }
 export {};

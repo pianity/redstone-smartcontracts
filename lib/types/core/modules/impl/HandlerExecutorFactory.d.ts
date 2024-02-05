@@ -17,6 +17,10 @@ export declare class NonWhitelistedSourceError<T> extends Error {
     readonly error: T;
     constructor(error: T);
 }
+export declare class AbortError<T> extends Error {
+    readonly error: T;
+    constructor(error: T);
+}
 /**
  * A factory that produces handlers that are compatible with the "current" style of
  * writing SW contracts (i.e. using "handle" function).

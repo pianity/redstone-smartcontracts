@@ -20,7 +20,7 @@ export interface InteractionsLoader extends GwTypeAware, WarpAware {
      * @param toSortKey - inclusive, optional - sortKey, to which the interactions should be loaded
      * @param evaluationOptions, optional - {@link EvaluationOptions}
      */
-    load(contractTxId: string, fromSortKey?: string, toSortKey?: string, evaluationOptions?: EvaluationOptions): Promise<GQLNodeInterface[]>;
+    load(contractTxId: string, fromSortKey?: string, toSortKey?: string, evaluationOptions?: EvaluationOptions, signal?: AbortSignal): Promise<GQLNodeInterface[]>;
     clearCache(): void;
 }
 //# sourceMappingURL=InteractionsLoader.d.ts.map

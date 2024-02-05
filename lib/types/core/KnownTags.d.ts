@@ -39,6 +39,7 @@ export declare const WARP_TAGS: {
     readonly WARP_TESTNET: "Warp-Testnet";
     readonly MANIFEST: "Contract-Manifest";
     readonly NONCE: "Nonce";
+    readonly INPUT_FORMAT: "Input-Format";
 };
 export type WarpTags = ObjectValues<typeof WARP_TAGS>;
 export {};

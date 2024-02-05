@@ -13,7 +13,7 @@ export declare class ArweaveGatewayInteractionsLoader implements InteractionsLoa
     private _warp;
     private readonly tagsParser;
     constructor(arweave: Arweave, environment: WarpEnvironment);
-    load(contractId: string, fromSortKey?: string, toSortKey?: string, evaluationOptions?: EvaluationOptions): Promise<GQLNodeInterface[]>;
+    load(contractId: string, fromSortKey?: string, toSortKey?: string, evaluationOptions?: EvaluationOptions, signal?: AbortSignal): Promise<GQLNodeInterface[]>;
     type(): GW_TYPE;
     clearCache(): void;
     set warp(warp: Warp);

@@ -1,11 +1,10 @@
 import Arweave from 'arweave';
-import { ContractDefinition, ContractSource, ContractCache, SrcCache } from '../../../core/ContractDefinition';
+import { ContractDefinition, ContractSource } from '../../../core/ContractDefinition';
 import { ArweaveWrapper } from '../../../utils/ArweaveWrapper';
 import { DefinitionLoader } from '../DefinitionLoader';
 import { GW_TYPE } from '../InteractionsLoader';
 import { Warp, WarpEnvironment } from '../../Warp';
-import { BasicSortKeyCache } from '../../../cache/BasicSortKeyCache';
-export declare class ContractDefinitionLoader implements DefinitionLoader {
+export declare class ArweaveContractDefinitionLoader implements DefinitionLoader {
     private readonly arweave;
     private readonly env;
     private readonly logger;
@@ -17,10 +16,6 @@ export declare class ContractDefinitionLoader implements DefinitionLoader {
     loadContractSource(contractSrcTxId: string): Promise<ContractSource>;
     private evalInitialState;
     type(): GW_TYPE;
-    setCache(cache: BasicSortKeyCache<ContractDefinition<unknown>>): void;
-    setSrcCache(cache: BasicSortKeyCache<SrcCache>): void;
-    getCache(): BasicSortKeyCache<ContractCache<unknown>>;
-    getSrcCache(): BasicSortKeyCache<SrcCache>;
     set warp(warp: Warp);
 }
-//# sourceMappingURL=ContractDefinitionLoader.d.ts.map
+//# sourceMappingURL=ArweaveContractDefinitionLoader.d.ts.map

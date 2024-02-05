@@ -42,5 +42,6 @@ export type ExecutionContext<State, Api = unknown> = {
     caller?: string;
     cachedState?: SortKeyCacheResult<EvalStateResult<State>>;
     requestedSortKey?: string;
+    signal?: AbortSignal;
 };
 //# sourceMappingURL=ExecutionContext.d.ts.map

@@ -39,13 +39,15 @@ export declare class HandlerBasedContract<State> implements Contract<State> {
     private _children;
     private _interactionState;
     private _dreStates;
+    private maxInteractionDataItemSizeBytes;
     constructor(_contractTxId: string, warp: Warp, _parentContract?: Contract, _innerCallData?: InnerCallData);
-    readState(sortKeyOrBlockHeight?: string | number, caller?: string, interactions?: GQLNodeInterface[]): Promise<SortKeyCacheResult<EvalStateResult<State>>>;
-    readStateFor(sortKey: string, interactions: GQLNodeInterface[]): Promise<SortKeyCacheResult<EvalStateResult<State>>>;
-    viewState<Input, View>(input: Input, tags?: Tags, transfer?: ArTransfer, caller?: string): Promise<InteractionResult<State, View>>;
-    viewStateForTx<Input, View>(input: Input, interactionTx: GQLNodeInterface): Promise<InteractionResult<State, View>>;
+    readState(sortKeyOrBlockHeight?: string | number, interactions?: GQLNodeInterface[], signal?: AbortSignal): Promise<SortKeyCacheResult<EvalStateResult<State>>>;
+    readStateFor(sortKey: string, interactions: GQLNodeInterface[], signal?: AbortSignal): Promise<SortKeyCacheResult<EvalStateResult<State>>>;
+    readStateBatch(pagesPerBatch?: number, sortKey?: string, signal?: AbortSignal): Promise<SortKeyCacheResult<EvalStateResult<State>>>;
+    viewState<Input, View>(input: Input, tags?: Tags, transfer?: ArTransfer, caller?: string, signal?: AbortSignal): Promise<InteractionResult<State, View>>;
+    viewStateForTx<Input, View>(input: Input, interactionTx: GQLNodeInterface, signal?: AbortSignal): Promise<InteractionResult<State, View>>;
     dryWrite<Input>(input: Input, caller?: string, tags?: Tags, transfer?: ArTransfer, vrf?: boolean): Promise<InteractionResult<State, unknown>>;
-    applyInput<Input>(input: Input, transaction: GQLNodeInterface): Promise<InteractionResult<State, unknown>>;
+    applyInput<Input>(input: Input, transaction: GQLNodeInterface, signal?: AbortSignal): Promise<InteractionResult<State, unknown>>;
     writeInteraction<Input>(input: Input, options?: WriteInteractionOptions): Promise<WriteInteractionResponse | null>;
     private bundleInteraction;
     private createInteractionDataItem;
@@ -57,6 +59,7 @@ export declare class HandlerBasedContract<State> implements Contract<State> {
     setEvaluationOptions(options: Partial<EvaluationOptions>): Contract<State>;
     private waitForConfirmation;
     private createExecutionContext;
+    private getSortedInteractions;
     private resolveEvaluationOptions;
     private getRemoteContractState;
     private fetchRemoteContractState;
@@ -86,5 +89,6 @@ export declare class HandlerBasedContract<State> implements Contract<State> {
     hasDreState(contractTxId: string): boolean;
     private discoverInternalWrites;
     clearChildren(): void;
+    private createManifest;
 }
 //# sourceMappingURL=HandlerBasedContract.d.ts.map

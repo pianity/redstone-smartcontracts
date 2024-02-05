@@ -80,6 +80,7 @@ export declare class DefaultEvaluationOptions implements EvaluationOptions {
     remoteStateSyncSource: string;
     useConstructor: boolean;
     whitelistSources: any[];
+    transactionsPagesPerBatch: any;
 }
 export interface EvaluationOptions {
     ignoreExceptions: boolean;
@@ -105,6 +106,7 @@ export interface EvaluationOptions {
     remoteStateSyncEnabled: boolean;
     remoteStateSyncSource: string;
     whitelistSources: string[];
+    transactionsPagesPerBatch: number;
 }
 export declare class CustomEvent<T = unknown> extends Event {
     readonly detail: T;
