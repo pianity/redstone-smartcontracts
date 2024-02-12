@@ -128,7 +128,7 @@ export interface Contract<State = unknown> {
      * @param caller - caller of the view state operation
      * transaction
      */
-    viewState<Input = unknown, View = unknown>(input: Input, tags?: Tags, transfer?: ArTransfer, caller?: string, signal?: AbortSignal): Promise<InteractionResult<State, View>>;
+    viewState<Input = unknown, View = unknown>(input: Input, tags?: Tags, transfer?: ArTransfer, caller?: string, signal?: AbortSignal, sortKey?: string): Promise<InteractionResult<State, View>>;
     /**
      * A version of the viewState method to be used from within the contract's source code.
      * The transaction passed as an argument is the currently processed interaction transaction.
@@ -152,8 +152,9 @@ export interface Contract<State = unknown> {
      * @param caller - an option to override the caller - if available, this value will overwrite the caller evaluated
      * from the wallet connected to this contract.
      * @param vrf - whether a mock VRF data should be generated
+     * @param sortKey - sortKey at which the state will be loaded prior to applying input
      */
-    dryWrite<Input>(input: Input, caller?: string, tags?: Tags, transfer?: ArTransfer, vrf?: boolean): Promise<InteractionResult<State, unknown>>;
+    dryWrite<Input>(input: Input, caller?: string, tags?: Tags, transfer?: ArTransfer, vrf?: boolean, sortKey?: string): Promise<InteractionResult<State, unknown>>;
     applyInput<Input>(input: Input, transaction: GQLNodeInterface, signal?: AbortSignal): Promise<InteractionResult<State, unknown>>;
     /**
      * Writes a new "interaction" transaction - i.e. such transaction that stores input for the contract.

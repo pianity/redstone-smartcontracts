@@ -81,6 +81,8 @@ export declare class DefaultEvaluationOptions implements EvaluationOptions {
     useConstructor: boolean;
     whitelistSources: any[];
     transactionsPagesPerBatch: any;
+    strictSortKey: boolean;
+    strictEvolve: boolean;
 }
 export interface EvaluationOptions {
     ignoreExceptions: boolean;
@@ -107,6 +109,8 @@ export interface EvaluationOptions {
     remoteStateSyncSource: string;
     whitelistSources: string[];
     transactionsPagesPerBatch: number;
+    strictSortKey: boolean;
+    strictEvolve: boolean;
 }
 export declare class CustomEvent<T = unknown> extends Event {
     readonly detail: T;

@@ -44,9 +44,9 @@ export declare class HandlerBasedContract<State> implements Contract<State> {
     readState(sortKeyOrBlockHeight?: string | number, interactions?: GQLNodeInterface[], signal?: AbortSignal): Promise<SortKeyCacheResult<EvalStateResult<State>>>;
     readStateFor(sortKey: string, interactions: GQLNodeInterface[], signal?: AbortSignal): Promise<SortKeyCacheResult<EvalStateResult<State>>>;
     readStateBatch(pagesPerBatch?: number, sortKey?: string, signal?: AbortSignal): Promise<SortKeyCacheResult<EvalStateResult<State>>>;
-    viewState<Input, View>(input: Input, tags?: Tags, transfer?: ArTransfer, caller?: string, signal?: AbortSignal): Promise<InteractionResult<State, View>>;
+    viewState<Input, View>(input: Input, tags?: Tags, transfer?: ArTransfer, caller?: string, signal?: AbortSignal, sortKey?: string): Promise<InteractionResult<State, View>>;
     viewStateForTx<Input, View>(input: Input, interactionTx: GQLNodeInterface, signal?: AbortSignal): Promise<InteractionResult<State, View>>;
-    dryWrite<Input>(input: Input, caller?: string, tags?: Tags, transfer?: ArTransfer, vrf?: boolean): Promise<InteractionResult<State, unknown>>;
+    dryWrite<Input>(input: Input, caller?: string, tags?: Tags, transfer?: ArTransfer, vrf?: boolean, sortKey?: string): Promise<InteractionResult<State, unknown>>;
     applyInput<Input>(input: Input, transaction: GQLNodeInterface, signal?: AbortSignal): Promise<InteractionResult<State, unknown>>;
     writeInteraction<Input>(input: Input, options?: WriteInteractionOptions): Promise<WriteInteractionResponse | null>;
     private bundleInteraction;
