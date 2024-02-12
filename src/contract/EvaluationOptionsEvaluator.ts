@@ -108,14 +108,17 @@ export class EvaluationOptionsEvaluator {
     useKVStorage: (foreignOptions) => foreignOptions['useKVStorage'],
     useConstructor: (foreignOptions) => foreignOptions['useConstructor'],
     whitelistSources: () => this.rootOptions['whitelistSources'],
-    transactionsPagesPerBatch: () => this.rootOptions['transactionsPagesPerBatch']
+    transactionsPagesPerBatch: () => this.rootOptions['transactionsPagesPerBatch'],
+    strictSortKey: () => this.rootOptions['strictSortKey'],
+    strictEvolve: () => this.rootOptions['strictEvolve']
   };
 
   private readonly notConflictingEvaluationOptions: (keyof EvaluationOptions)[] = [
     'useKVStorage',
     'sourceType',
     'useConstructor',
-    'transactionsPagesPerBatch'
+    'transactionsPagesPerBatch',
+    'strictSortKey'
   ];
 
   /**
