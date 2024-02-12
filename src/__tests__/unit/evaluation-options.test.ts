@@ -26,6 +26,8 @@ describe('Evaluation options evaluator', () => {
       stackTrace: {
         saveState: false
       },
+      strictEvolve: true,
+      strictSortKey: false,
       throwOnInternalWriteError: true,
       transactionsPagesPerBatch: null,
       unsafeClient: 'throw',
@@ -65,6 +67,8 @@ describe('Evaluation options evaluator', () => {
       stackTrace: {
         saveState: false
       },
+      strictEvolve: true,
+      strictSortKey: false,
       throwOnInternalWriteError: true,
       transactionsPagesPerBatch: null,
       unsafeClient: 'throw',
@@ -99,6 +103,8 @@ describe('Evaluation options evaluator', () => {
       stackTrace: {
         saveState: false
       },
+      strictEvolve: true,
+      strictSortKey: false,
       throwOnInternalWriteError: true,
       transactionsPagesPerBatch: null,
       unsafeClient: 'allow',
@@ -130,6 +136,8 @@ describe('Evaluation options evaluator', () => {
       stackTrace: {
         saveState: false
       },
+      strictEvolve: true,
+      strictSortKey: false,
       throwOnInternalWriteError: true,
       transactionsPagesPerBatch: null,
       unsafeClient: 'allow',
@@ -161,6 +169,8 @@ describe('Evaluation options evaluator', () => {
       stackTrace: {
         saveState: false
       },
+      strictEvolve: true,
+      strictSortKey: false,
       throwOnInternalWriteError: true,
       transactionsPagesPerBatch: null,
       unsafeClient: 'throw',
@@ -192,6 +202,8 @@ describe('Evaluation options evaluator', () => {
       stackTrace: {
         saveState: false
       },
+      strictEvolve: true,
+      strictSortKey: false,
       throwOnInternalWriteError: true,
       transactionsPagesPerBatch: null,
       unsafeClient: 'skip',

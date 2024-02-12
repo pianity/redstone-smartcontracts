@@ -282,14 +282,15 @@ export class HandlerBasedContract<State> implements Contract<State> {
     tags: Tags = [],
     transfer: ArTransfer = emptyTransfer,
     caller?: string,
-    signal?: AbortSignal
+    signal?: AbortSignal,
+    sortKey?: string
   ): Promise<InteractionResult<State, View>> {
     this.logger.info('View state for', this._contractTxId);
     return await this.callContract<Input, View>(
       input,
       'view',
       caller,
-      undefined,
+      sortKey,
       tags,
       transfer,
       false,
@@ -313,10 +314,11 @@ export class HandlerBasedContract<State> implements Contract<State> {
     caller?: string,
     tags?: Tags,
     transfer?: ArTransfer,
-    vrf?: boolean
+    vrf?: boolean,
+    sortKey?: string
   ): Promise<InteractionResult<State, unknown>> {
     this.logger.info('Dry-write for', this._contractTxId);
-    return await this.callContract<Input>(input, 'write', caller, undefined, tags, transfer, undefined, vrf);
+    return await this.callContract<Input>(input, 'write', caller, sortKey, tags, transfer, undefined, vrf);
   }
 
   async applyInput<Input>(
@@ -648,6 +650,9 @@ export class HandlerBasedContract<State> implements Contract<State> {
       >;
     }
     cachedState = cachedState || (await stateEvaluator.latestAvailableState<State>(contractTxId, upToSortKey));
+    if (upToSortKey && this.evaluationOptions().strictSortKey && cachedState?.sortKey != upToSortKey) {
+      throw new Error(`State not cached at the exact required ${upToSortKey} sortKey`);
+    }
 
     this.logger.debug('cache lookup', benchmark.elapsed());
     benchmark.reset();

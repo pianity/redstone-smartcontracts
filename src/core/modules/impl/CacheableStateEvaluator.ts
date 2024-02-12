@@ -52,8 +52,8 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
 
     const isFirstEvaluation = cachedState == null;
     let baseState = isFirstEvaluation ? executionContext.contractDefinition.initState : cachedState.cachedValue.state;
-    const baseValidity = isFirstEvaluation ? {} : cachedState.cachedValue.validity;
-    const baseErrorMessages = isFirstEvaluation ? {} : cachedState.cachedValue.errorMessages;
+    const baseValidity = isFirstEvaluation ? {} : cachedState.cachedValue.validity || {};
+    const baseErrorMessages = isFirstEvaluation ? {} : cachedState.cachedValue.errorMessages || {};
 
     if (isFirstEvaluation) {
       baseState = await executionContext.handler.maybeCallStateConstructor(
@@ -81,7 +81,7 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     // eval state for the missing transactions - starting from the latest value from cache.
     return await this.doReadState(
       missingInteractions,
-      new EvalStateResult(baseState, baseValidity, baseErrorMessages || {}),
+      new EvalStateResult(baseState, baseValidity, baseErrorMessages),
       executionContext
     );
   }
@@ -182,7 +182,7 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     if (transaction.confirmationStatus !== undefined && transaction.confirmationStatus !== 'confirmed') {
       return;
     }
-    const stateToCache = new EvalStateResult(state.state, state.validity, state.errorMessages || {});
+    const stateToCache = new EvalStateResult(state.state, state.validity || {}, state.errorMessages || {});
 
     this.cLogger.debug('Putting into cache', {
       contractTxId,
