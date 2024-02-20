@@ -41,8 +41,8 @@ export declare class HandlerBasedContract<State> implements Contract<State> {
     private _dreStates;
     private maxInteractionDataItemSizeBytes;
     constructor(_contractTxId: string, warp: Warp, _parentContract?: Contract, _innerCallData?: InnerCallData);
-    readState(sortKeyOrBlockHeight?: string | number, interactions?: GQLNodeInterface[], signal?: AbortSignal): Promise<SortKeyCacheResult<EvalStateResult<State>>>;
-    readStateFor(sortKey: string, interactions: GQLNodeInterface[], signal?: AbortSignal): Promise<SortKeyCacheResult<EvalStateResult<State>>>;
+    readState(sortKeyOrBlockHeight?: string | number, interactions?: GQLNodeInterface[], signal?: AbortSignal, state?: SortKeyCacheResult<EvalStateResult<State>>): Promise<SortKeyCacheResult<EvalStateResult<State>>>;
+    readStateFor(sortKey: string, interactions: GQLNodeInterface[], signal?: AbortSignal, state?: SortKeyCacheResult<EvalStateResult<State>>): Promise<SortKeyCacheResult<EvalStateResult<State>>>;
     readStateBatch(pagesPerBatch?: number, sortKey?: string, signal?: AbortSignal): Promise<SortKeyCacheResult<EvalStateResult<State>>>;
     viewState<Input, View>(input: Input, tags?: Tags, transfer?: ArTransfer, caller?: string, signal?: AbortSignal, sortKey?: string): Promise<InteractionResult<State, View>>;
     viewStateForTx<Input, View>(input: Input, interactionTx: GQLNodeInterface, signal?: AbortSignal): Promise<InteractionResult<State, View>>;
