@@ -38,26 +38,29 @@ export class ContractInteractionState implements InteractionState {
   }
 
   async getKV(contractTxId: string, cacheKey: CacheKey): Promise<unknown> {
-    const storage = await this.getOrInitKvStorage(contractTxId);
-    return (await storage.get(cacheKey))?.cachedValue || null;
+    if (this._kv.has(contractTxId)) {
+      return (await this._kv.get(contractTxId).get(cacheKey))?.cachedValue || null;
+    }
+    return null;
   }
 
   async delKV(contractTxId: string, cacheKey: CacheKey): Promise<void> {
-    const storage = await this.getOrInitKvStorage(contractTxId);
-    await storage.del(cacheKey);
+    if (this._kv.has(contractTxId)) {
+      await this._kv.get(contractTxId).del(cacheKey);
+    }
   }
 
-  async getKvKeys(contractTxId: string, sortKey?: string, options?: SortKeyCacheRangeOptions): Promise<string[]> {
-    const storage = await this.getOrInitKvStorage(contractTxId);
+  getKvKeys(contractTxId: string, sortKey?: string, options?: SortKeyCacheRangeOptions): Promise<string[]> {
+    const storage = this._warp.kvStorageFactory(contractTxId);
     return storage.keys(sortKey, options);
   }
 
-  async getKvRange(
+  getKvRange(
     contractTxId: string,
     sortKey?: string,
     options?: SortKeyCacheRangeOptions
   ): Promise<Map<string, unknown>> {
-    const storage = await this.getOrInitKvStorage(contractTxId);
+    const storage = this._warp.kvStorageFactory(contractTxId);
     return storage.kvMap(sortKey, options);
   }
 
