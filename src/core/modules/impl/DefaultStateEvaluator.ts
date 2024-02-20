@@ -317,8 +317,9 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
       }
 
       const forceStateStoreToCache =
-        executionContext.evaluationOptions.cacheEveryNInteractions > 0 &&
-        i % executionContext.evaluationOptions.cacheEveryNInteractions === 0;
+        (executionContext.evaluationOptions.cacheEveryNInteractions > 0 &&
+          i % executionContext.evaluationOptions.cacheEveryNInteractions === 0) ||
+        missingInteractions.length == 1;
       // if that's the end of the root contract's interaction - commit all the uncommitted states to cache.
       if (contract.isRoot()) {
         contract.clearChildren();
@@ -343,7 +344,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
     // state could have been fully retrieved from cache
     // or there were no interactions below requested sort key
-    if (lastConfirmedTxState !== null) {
+    if (lastConfirmedTxState !== null && !(contract.isRoot() && missingInteractions.length == 1)) {
       await this.onStateEvaluated(lastConfirmedTxState.tx, executionContext, lastConfirmedTxState.state);
     }
 

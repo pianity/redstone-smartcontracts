@@ -150,7 +150,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
   async readState(
     sortKeyOrBlockHeight?: string | number,
     interactions?: GQLNodeInterface[],
-    signal?: AbortSignal
+    signal?: AbortSignal,
+    state?: SortKeyCacheResult<EvalStateResult<State>>
   ): Promise<SortKeyCacheResult<EvalStateResult<State>>> {
     this.logger.info('Read state for', {
       contractTxId: this._contractTxId,
@@ -182,7 +183,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
         sortKey,
         false,
         interactions,
-        signal
+        signal,
+        state
       );
       this.logger.info('Execution Context', {
         srcTxId: executionContext.contractDefinition?.srcTxId,
@@ -222,9 +224,10 @@ export class HandlerBasedContract<State> implements Contract<State> {
   async readStateFor(
     sortKey: string,
     interactions: GQLNodeInterface[],
-    signal?: AbortSignal
+    signal?: AbortSignal,
+    state?: SortKeyCacheResult<EvalStateResult<State>>
   ): Promise<SortKeyCacheResult<EvalStateResult<State>>> {
-    return this.readState(sortKey, interactions, signal);
+    return this.readState(sortKey, interactions, signal, state);
   }
 
   async readStateBatch(
@@ -638,7 +641,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
     upToSortKey?: string,
     forceDefinitionLoad = false,
     interactions?: GQLNodeInterface[],
-    signal?: AbortSignal
+    signal?: AbortSignal,
+    state?: SortKeyCacheResult<EvalStateResult<State>>
   ): Promise<ExecutionContext<State, HandlerApi<State>>> {
     const { definitionLoader, interactionsLoader, stateEvaluator } = this.warp;
     let cachedState: SortKeyCacheResult<EvalStateResult<State>>;
@@ -649,7 +653,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
         EvalStateResult<State>
       >;
     }
-    cachedState = cachedState || (await stateEvaluator.latestAvailableState<State>(contractTxId, upToSortKey));
+    cachedState = state || cachedState || (await stateEvaluator.latestAvailableState<State>(contractTxId, upToSortKey));
     if (upToSortKey && this.evaluationOptions().strictSortKey && cachedState?.sortKey != upToSortKey) {
       throw new Error(`State not cached at the exact required ${upToSortKey} sortKey`);
     }
