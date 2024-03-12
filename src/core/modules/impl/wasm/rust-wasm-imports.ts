@@ -742,7 +742,10 @@ export const rustWasmImports = (
     },
     __wbg_height: function () {
       return logError(function () {
-        const ret = rawImports.Block.height();
+        let ret = rawImports.Block.height();
+        if (typeof ret === 'string') {
+          ret = parseInt(ret);
+        }
         _assertNum(ret);
         return ret;
       }, arguments);
